@@ -1,0 +1,2670 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeepSeek</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%234d6bfe%22%3E%3Cpath%20d%3D%22M23.748%204.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434%201.202-.422%201.84.027%201.436.633%202.58%201.838%203.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526%205.526%200%2001-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365%2011.365%200%2000-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055%203.055%200%2001-.465.137%209.597%209.597%200%2000-2.883-.102c-1.885.21-3.39%201.102-4.497%202.623C.082%208.606-.231%2010.684.152%2012.85c.403%202.284%201.569%204.175%203.36%205.653%201.858%201.533%203.997%202.284%206.438%202.14%201.482-.085%203.133-.284%204.994-1.86.47.234.962.327%201.78.397.63.059%201.236-.03%201.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926%201.096-1.296%202.746-2.642%203.392-7.003.05-.347.007-.565%200-.845-.004-.17.035-.237.23-.256a4.173%204.173%200%20001.545-.475c1.396-.763%201.96-2.015%202.093-3.517.02-.23-.004-.467-.247-.588zM11.581%2018c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696%204.696%200%20011.529-.039c2.132.312%203.946%201.265%205.468%202.774.868.86%201.525%201.887%202.202%202.891.72%201.066%201.494%202.082%202.48%202.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306%200%2001.415-.287.302.302%200%2001.2.288.306.306%200%2001-.31.307.303.303%200%2001-.304-.308zm3.11%201.596c-.2.081-.399.151-.59.16a1.245%201.245%200%2001-.798-.254c-.274-.23-.47-.358-.552-.758a1.73%201.73%200%2001.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559%200%2001-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136%201.146.016.352.144.618.408%201.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z%22%20fill%3D%22%234D6BFE%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E">
+<style>
+  :root{
+    --blue:#4d6bfe;
+    --blue-soft:#eef2ff;
+    --text:#262626;
+    --text-1:#1a1a1a;
+    --text-2:#6f6f6f;
+    --text-3:#a2a2a2;
+    --text-4:#c2c2c2;
+    --line:#e9e9e9;
+    --line-2:#f1f1f1;
+    --side:#f9f9f9;
+    --hover:#efefef;
+    --active:#e8ecfb;
+    --radius:12px;
+    --sbw:264px;      /* 原版侧栏实测 265px */
+    --colw:768px;     /* 原版正文栏 / 输入框实测 773px */
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;
+    color:var(--text);
+    background:#fff;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow:hidden;
+  }
+  ::selection{background:#d8e2ff;color:#1a1a1a}
+  button{font-family:inherit;border:0;background:none;padding:0;cursor:pointer;color:inherit}
+  svg{display:block}
+  #app{display:flex;height:100vh;width:100%;overflow:hidden}
+
+  /* ---------------- sidebar ---------------- */
+  #sidebar{
+    width:var(--sbw);flex:0 0 var(--sbw);background:var(--side);
+    display:flex;flex-direction:column;min-height:0;
+    border-right:1px solid #ededed;
+    transition:margin-left .26s cubic-bezier(.4,0,.2,1);
+    position:relative;z-index:20;
+  }
+  body.sb-collapsed #sidebar{margin-left:calc(-1 * var(--sbw))}
+  .sb-head{
+    height:70px;flex:0 0 70px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 10px 0 20px;
+  }
+  .brand{display:flex;align-items:center;gap:5px;user-select:none}
+  .brand .mark-svg{width:28px;height:28px;flex:0 0 28px;color:var(--blue);display:block}
+  .brand .word-svg{height:20px;width:auto;flex:0 0 auto;color:var(--blue);display:block}
+  .sb-head-acts{display:flex;align-items:center;gap:2px}
+  .icon-btn{
+    width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;color:#8a8a8a;transition:background .15s,color .15s;
+  }
+  .icon-btn:hover{background:#eaeaea;color:#333}
+  .icon-btn svg{width:17px;height:17px}
+
+  .new-chat{
+    margin:0 18px 8px;height:42px;flex:0 0 42px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:#fff;border:1px solid #f0f1f5;border-radius:21px;
+    font-size:14px;color:#1f2126;
+    transition:box-shadow .18s,border-color .18s,background .18s;
+    box-shadow:0 1px 2px rgba(16,24,40,.035);
+  }
+  .new-chat:hover{border-color:#e5e7ed;box-shadow:0 2px 8px rgba(16,24,40,.07)}
+  .new-chat .plus{
+    width:15px;height:15px;flex:0 0 15px;color:#22242b;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .new-chat .plus svg{width:15px;height:15px;display:block}
+
+  .sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 12px 8px;min-height:0}
+  .sb-scroll::-webkit-scrollbar{width:6px}
+  .sb-scroll::-webkit-scrollbar-thumb{background:#dcdcdc;border-radius:3px}
+  .sb-scroll::-webkit-scrollbar-thumb:hover{background:#c8c8c8}
+  .group-title{
+    font-size:13px;color:#9e9e9e;padding:21px 14px 6px;letter-spacing:.2px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .sort-btn{
+    width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+    color:#b0b0b0;border-radius:4px;
+  }
+  .sort-btn svg{width:13px;height:13px}
+  .sort-btn:hover{background:#eaeaea;color:#666}
+  .item{
+    position:relative;margin:1px 0;padding:9px 26px 9px 14px;border-radius:9px;
+    font-size:14px;color:#333;line-height:1.45;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:background .12s;
+  }
+  .item:hover{background:var(--hover)}
+  .item.active{background:var(--active)}
+  .item .more{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    font-size:13px;color:#8d8d8d;opacity:0;letter-spacing:0;line-height:1;
+  }
+  .item:hover .more{opacity:1}
+  .empty-tip{padding:8px 16px;font-size:12.5px;color:#b0b0b0;line-height:1.7}
+
+  .sb-foot{padding:8px 10px 12px;border-top:1px solid #f0f0f0;margin-top:2px;position:relative}
+  .user-menu{
+    position:absolute;left:8px;bottom:56px;width:206px;background:#fff;
+    border:1px solid #ececec;border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.12);
+    padding:6px;display:none;z-index:50;
+  }
+  .user-menu.show{display:block;animation:pop .16s ease both}
+  .user-menu button{
+    display:flex;align-items:center;justify-content:space-between;width:100%;
+    padding:8px 10px;border-radius:8px;font-size:13px;color:#3d3d3d;text-align:left;
+  }
+  .user-menu button:hover{background:#f4f4f4}
+  .user-menu button span.k{font-size:11px;color:#b0b0b0}
+  .user{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:9px;cursor:default}
+  .user:hover{background:var(--hover)}
+  .avatar{
+    width:22px;height:22px;border-radius:50%;background:#e4e4e4;color:#7c7c7c;
+    display:flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 22px;
+  }
+  .user .email{font-size:12.5px;color:#5f5f5f;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------------- main ---------------- */
+  #main{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;background:#fff}
+  .main-top{
+    position:absolute;top:0;left:0;right:0;height:52px;z-index:15;
+    display:flex;align-items:center;justify-content:flex-end;gap:2px;
+    padding:0 16px;pointer-events:none;
+    background:linear-gradient(to bottom,rgba(255,255,255,.94),rgba(255,255,255,0));
+  }
+  .main-top > *{pointer-events:auto}
+  .main-top .icon-btn{color:#9a9a9a}
+  .main-top .icon-btn:hover{background:#f0f0f0;color:#444}
+  #expandSb{
+    position:absolute;left:12px;top:12px;opacity:0;pointer-events:none;
+    transition:opacity .2s;
+  }
+  body.sb-collapsed #expandSb{opacity:1;pointer-events:auto}
+
+  .chat-scroll{
+    position:relative;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:0;scroll-behavior:auto;
+  }
+  .chat-scroll::-webkit-scrollbar{width:10px}
+  .chat-scroll::-webkit-scrollbar-track{background:transparent}
+  .chat-scroll::-webkit-scrollbar-thumb{background:#dcdcdc;border-radius:6px;border:3px solid #fff}
+  .chat-scroll::-webkit-scrollbar-thumb:hover{background:#c4c4c4}
+
+  .thread{
+    position:relative;max-width:var(--colw);margin:0 auto;padding:46px 20px 8px;
+    font-size:16px;line-height:1.95;
+  }
+
+  /* chapter = one assistant answer */
+  .chapter{animation:fadeUp .34s ease both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .chapter + .chapter{margin-top:30px;padding-top:26px;border-top:1px solid var(--line-2)}
+  .ch-title{
+    font-size:17px;font-weight:600;line-height:1.55;color:var(--text-1);
+    margin:0 0 15px;letter-spacing:.1px;
+  }
+  .ch-body p{
+    margin:0 0 var(--pgap,13px);color:#2b2b2b;text-align:justify;
+    font-size:var(--fs,16px);line-height:var(--lh,1.95);
+    letter-spacing:.012em;
+  }
+  .ch-body p:last-child{margin-bottom:0}
+  body.indent .ch-body p{text-indent:2em}
+  .ch-body code{
+    background:#f3f3f3;border-radius:4px;padding:1px 5px;color:#3c3c3c;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;font-size:.86em;
+  }
+  .code{
+    margin:15px 0;background:#f7f7f7;border:1px solid #f0f0f0;border-radius:10px;overflow:hidden;
+  }
+  .code-head{
+    display:flex;align-items:center;justify-content:space-between;padding:9px 13px 3px;
+    font-size:11.5px;color:#a0a0a0;letter-spacing:.3px;
+  }
+  .code-acts{display:flex;gap:12px}
+  .code-acts button{font-size:11.5px;color:#9a9a9a;display:flex;align-items:center;gap:4px}
+  .code-acts svg{width:11px;height:11px}
+  .code-acts button:hover{color:#4a4a4a}
+  .code pre{
+    margin:0;padding:4px 14px 14px;overflow-x:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    font-size:12.8px;line-height:1.78;color:#3a3a3a;white-space:pre;
+  }
+  .code .k{color:#d73a49}
+  .code .f{color:#6f42c1}
+  .code .n{color:#005cc5}
+  .code .s{color:#032f62}
+  .msg-foot{
+    display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;
+    font-size:12px;color:#b4b4b4;line-height:1.6;
+  }
+  .foot-acts{display:flex;align-items:center;gap:2px}
+  .foot-acts button{
+    width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    color:#a8a8a8;transition:background .14s,color .14s;
+  }
+  .foot-acts button:hover{background:#f2f2f2;color:#555}
+  .foot-acts svg{width:15px;height:15px}
+  .foot-acts button.on{color:var(--blue)}
+
+  /* ---------------- real chat formatting (AI 回答) ---------------- */
+  .ask-row{display:flex;justify-content:flex-end;margin:0 0 30px}
+  .ask{
+    max-width:78%;background:#f4f4f5;border-radius:18px;padding:11px 16px;
+    font-size:16px;line-height:1.75;color:#1f1f1f;
+    white-space:pre-wrap;word-break:break-word;
+  }
+  .ask .ask-code{
+    margin:9px 0 3px;background:#ebebec;border-radius:10px;padding:9px 13px;
+    overflow-x:auto;white-space:normal;
+  }
+  .ask .ask-code pre{
+    margin:0;white-space:pre;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    font-size:13px;line-height:1.75;color:#3a3a3a;
+  }
+  .think{
+    display:inline-flex;align-items:center;gap:6px;margin:0 0 14px;
+    font-size:14px;color:#9a9a9a;cursor:pointer;user-select:none;line-height:1.5;
+  }
+  .think:hover{color:#6a6a6a}
+  .think > svg{width:12px;height:12px;flex:0 0 12px;transition:transform .18s}
+  .think.open > svg{transform:rotate(90deg)}
+  .think-body{
+    display:none;margin:0 0 20px;padding:2px 0 2px 14px;
+    border-left:2px solid #ededed;color:#8a8a8a;font-size:14.5px;line-height:1.9;
+  }
+  .think.open + .think-body{display:block}
+  .think-body p{margin:0 0 8px}
+  .think-body p:last-child{margin-bottom:0}
+
+  .ch-body h2{
+    font-size:18px;font-weight:600;color:#1a1a1a;line-height:1.5;
+    margin:28px 0 12px;letter-spacing:.1px;
+  }
+  .ch-body h3{
+    font-size:16px;font-weight:600;color:#1a1a1a;line-height:1.55;
+    margin:22px 0 10px;
+  }
+  .ch-body h2:first-child,.ch-body h3:first-child{margin-top:0}
+  .ch-body ul,.ch-body ol{margin:0 0 15px;padding-left:23px}
+  .ch-body li{margin:6px 0;color:#2b2b2b;font-size:var(--fs,16px);line-height:var(--lh,1.95)}
+  .ch-body li::marker{color:#9d9d9d}
+  .ch-body li > ul,.ch-body li > ol{margin:6px 0 0}
+  .ch-body hr{border:0;border-top:1px solid #f0f0f0;margin:28px 0}
+  .ch-body blockquote{
+    margin:16px 0;padding:2px 0 2px 14px;border-left:3px solid #eaeaea;color:#5f5f5f;
+  }
+  .ch-body table{border-collapse:collapse;margin:18px 0;font-size:14.5px;line-height:1.7}
+  .ch-body th,.ch-body td{border:1px solid #ececec;padding:7px 13px;text-align:left;vertical-align:top}
+  .ch-body th{background:#fafafa;font-weight:600;color:#333;white-space:nowrap}
+  .ch-body strong,.ch-body b{font-weight:600;color:#1a1a1a}
+  .ch-body a{color:var(--blue);text-decoration:none}
+  .ch-body a:hover{text-decoration:underline}
+
+  /* ---------------- home (disguise) ---------------- */
+  .home{
+    display:none;align-items:center;justify-content:center;
+    height:100%;padding:0 24px;
+    animation:fadeUp .3s ease both;
+  }
+  /* 原版：输入框垂直居中，问候语悬在它上方 30px */
+  .home-inner{position:relative;width:100%;max-width:var(--colw)}
+  .home h1{
+    position:absolute;left:0;right:0;bottom:calc(100% + 30px);
+    display:flex;align-items:center;justify-content:center;gap:13px;
+    font-size:24px;font-weight:600;color:#14161a;margin:0;letter-spacing:.2px;
+  }
+  .home .greet-mark{width:32px;height:32px;flex:0 0 32px;color:var(--blue)}
+  .home-slot{width:100%;display:flex;justify-content:center}
+  body[data-mode="home"] .home{display:flex}
+  body[data-mode="home"] .thread{display:none}
+  body[data-mode="home"] .chat-scroll{overflow:hidden}
+  body[data-mode="home"] .composer-wrap{display:none}
+  body[data-mode="home"] #shareBtn{display:none}
+  body[data-mode="home"] #tocBtn{display:none}
+
+  /* ---------------- composer ---------------- */
+  .composer-wrap{
+    position:relative;z-index:14;flex:0 0 auto;
+    padding:0 20px 4px;background:#fff;
+  }
+  .composer-wrap::before{
+    content:"";position:absolute;left:0;right:0;top:-30px;height:30px;
+    background:linear-gradient(to bottom,rgba(255,255,255,0),#fff);
+    pointer-events:none;
+  }
+  .composer{
+    pointer-events:auto;width:100%;max-width:var(--colw);margin:0 auto;background:#fff;
+    border:1px solid #e7e7e7;border-radius:24px;
+    box-shadow:0 2px 12px rgba(0,0,0,.045),0 0 0 1px rgba(0,0,0,.008);
+    padding:16px 20px 12px;transition:border-color .18s,box-shadow .18s;
+  }
+  .composer.in-home{max-width:var(--colw);margin:0;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+  .composer:focus-within{border-color:#dcdcdc;box-shadow:0 4px 18px rgba(0,0,0,.07)}
+  .input{
+    min-height:52px;max-height:150px;overflow-y:auto;outline:none;
+    font-size:16px;line-height:1.6;color:#262626;padding:2px 2px 4px;word-break:break-word;
+  }
+  .input:empty::before{content:attr(data-ph);color:#b6b6b6;pointer-events:none}
+  .composer-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+  .pills{display:flex;gap:8px}
+  .pill{
+    height:32px;padding:0 13px;border-radius:16px;border:1px solid #e9e9e9;background:#fff;
+    display:flex;align-items:center;gap:5px;font-size:13px;color:#575757;transition:.15s;
+  }
+  .pill:hover{background:#f7f7f7}
+  .pill svg{width:13px;height:13px;color:#7a7a7a}
+  .pill.on{background:var(--blue-soft);border-color:#dbe3ff;color:#3f5be0}
+  .pill.on svg{color:#4d6bfe}
+  .comp-right{display:flex;align-items:center;gap:6px}
+  .send{
+    width:32px;height:32px;border-radius:50%;background:#b9c4f8;color:#fff;
+    display:flex;align-items:center;justify-content:center;transition:.18s;
+  }
+  .send:hover{background:#9fb0f6}
+  .send.ready{background:var(--blue)}
+  .send.ready:hover{background:#3f5ce8}
+  .send svg{width:16px;height:16px}
+  .footnote{
+    position:relative;max-width:var(--colw);margin:7px auto 0;text-align:center;
+    font-size:11.5px;color:#bdbdbd;height:16px;line-height:16px;
+  }
+  #progress{
+    position:absolute;right:2px;top:0;color:#c6c6c6;font-size:11.5px;
+    font-variant-numeric:tabular-nums;letter-spacing:.2px;
+  }
+  body.hide-hud #progress{display:none}
+
+  /* floating to-bottom */
+  #toBottom{
+    position:absolute;right:30px;bottom:178px;width:32px;height:32px;border-radius:50%;
+    background:#fff;border:1px solid #ececec;box-shadow:0 2px 10px rgba(0,0,0,.08);
+    display:flex;align-items:center;justify-content:center;color:#777;z-index:16;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;transform:translateY(6px);
+  }
+  #toBottom.show{opacity:1;pointer-events:auto;transform:none}
+  #toBottom svg{width:16px;height:16px}
+  #toBottom:hover{background:#fafafa;color:#333}
+
+  /* ---------------- panels ---------------- */
+  .panel{
+    position:absolute;z-index:40;background:#fff;border:1px solid #ececec;border-radius:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.1);padding:14px;
+  }
+  #settings{top:54px;right:16px;width:264px;display:none}
+  #settings.show{display:block;animation:pop .16s ease both}
+  @keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.985)}to{opacity:1;transform:none}}
+  .set-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:13px;color:#4a4a4a}
+  .set-row + .set-row{border-top:1px solid #f4f4f4}
+  .stepper{display:flex;align-items:center;gap:2px}
+  .stepper button{
+    width:26px;height:26px;border-radius:7px;background:#f6f6f6;color:#555;
+    display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;
+  }
+  .stepper button:hover{background:#ededed}
+  .stepper .val{min-width:44px;text-align:center;font-size:12.5px;color:#333;font-variant-numeric:tabular-nums}
+  .switch{
+    width:36px;height:20px;border-radius:10px;background:#e2e2e2;position:relative;transition:.18s;flex:0 0 36px;
+  }
+  .switch::after{
+    content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.18s;
+  }
+  .switch.on{background:var(--blue)}
+  .switch.on::after{left:18px}
+  .set-hint{font-size:11.5px;color:#b5b5b5;padding-top:9px;border-top:1px solid #f4f4f4;line-height:1.7}
+
+  #help{
+    position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+    background:rgba(20,20,20,.28);backdrop-filter:blur(2px);
+  }
+  #help.show{display:flex}
+  .help-card{
+    width:430px;background:#fff;border-radius:16px;padding:22px 24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.2);animation:pop .18s ease both;
+  }
+  .help-card h3{margin:0 0 4px;font-size:15px;font-weight:600;color:#222}
+  .help-card .h-sub{font-size:12px;color:#a5a5a5;margin-bottom:14px}
+  .krow{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:13px;color:#4a4a4a}
+  .krow + .krow{border-top:1px solid #f5f5f5}
+  kbd{
+    font-family:inherit;font-size:11.5px;background:#f5f5f5;border:1px solid #e8e8e8;
+    border-bottom-width:2px;border-radius:6px;padding:2px 7px;color:#555;margin-left:4px;
+  }
+
+  /* ---------------- table of contents ---------------- */
+  #toc{
+    position:fixed;inset:0;z-index:72;display:none;align-items:center;justify-content:center;
+    background:rgba(22,22,22,.26);backdrop-filter:blur(2px);padding:24px;
+  }
+  #toc.show{display:flex}
+  .toc-card{
+    width:min(920px,100%);height:auto;max-height:min(84vh,760px);background:#fff;border-radius:18px;
+    box-shadow:0 24px 70px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden;
+    animation:pop .18s ease both;
+  }
+  .toc-head{display:flex;align-items:center;gap:14px;padding:20px 20px 14px 26px}
+  .toc-head .shelf-x{margin-left:auto;flex:0 0 auto}
+  .toc-title{font-size:16px;font-weight:600;color:#1a1a1a;display:flex;align-items:baseline;gap:9px;flex:0 0 auto;letter-spacing:.2px}
+  .toc-title span{font-size:12px;color:#a8a8a8;font-weight:400;letter-spacing:0}
+  .toc-search{
+    flex:0 1 400px;min-width:0;height:36px;border:1px solid #ececec;border-radius:18px;
+    padding:0 15px;font-size:13px;color:#333;outline:none;background:#fafafa;
+    font-family:inherit;transition:.15s;
+  }
+  .toc-search:focus{border-color:#dcdcdc;background:#fff;box-shadow:0 0 0 3px rgba(77,107,254,.06)}
+  .toc-search::placeholder{color:#b6b6b6}
+  .toc-list{
+    overflow-y:auto;padding:6px 18px 24px;flex:1;min-height:0;
+    display:grid;grid-template-columns:1fr 1fr;gap:4px 22px;
+    align-content:start;grid-auto-rows:min-content;
+  }
+  .toc-list::-webkit-scrollbar{width:10px}
+  .toc-list::-webkit-scrollbar-thumb{background:#dedede;border-radius:5px;border:3px solid #fff}
+  .toc-item{
+    display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:9px;
+    font-size:13.5px;color:#333;text-align:left;overflow:hidden;white-space:nowrap;
+    transition:background .12s;min-width:0;
+  }
+  .toc-item:hover{background:#f4f4f5}
+  .toc-item.on{background:#eaeefb;color:#33417a;font-weight:500}
+  .toc-item .n{
+    font-size:11.5px;color:#c2c2c2;min-width:30px;text-align:right;flex:0 0 auto;
+    font-variant-numeric:tabular-nums;letter-spacing:-.2px;
+  }
+  .toc-item .t{overflow:hidden;text-overflow:ellipsis}
+  .toc-item.on .n{color:#7f8dc6}
+  .toc-empty{grid-column:1/-1;padding:48px 0;text-align:center;color:#b0b0b0;font-size:13px}
+  .toc-foot{
+    padding:12px 26px 16px;font-size:12px;color:#b0b0b0;border-top:1px solid #f4f4f5;
+    display:flex;justify-content:space-between;gap:10px;
+  }
+
+  /* ---------------- bookshelf ---------------- */
+  #shelf{
+    position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+    background:rgba(22,22,22,.26);backdrop-filter:blur(2px);padding:24px;
+  }
+  #shelf.show{display:flex}
+  .shelf-card{
+    width:560px;max-width:100%;max-height:76vh;background:#fff;border-radius:16px;
+    box-shadow:0 24px 70px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden;
+    animation:pop .18s ease both;
+  }
+  .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px}
+  .shelf-title{font-size:15px;font-weight:600;color:#1f1f1f;display:flex;align-items:baseline;gap:8px}
+  .shelf-title span{font-size:11.5px;font-weight:400;color:#a8a8a8}
+  .shelf-acts{display:flex;align-items:center;gap:6px}
+  .shelf-import{
+    height:30px;padding:0 12px;border-radius:15px;background:#f4f6ff;color:#4d6bfe;
+    font-size:12.5px;border:1px solid #e3e8ff;transition:.15s;
+  }
+  .shelf-import:hover{background:#ebefff}
+  .shelf-x{width:28px;height:28px;border-radius:8px;color:#9a9a9a;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .shelf-x:hover{background:#f2f2f2;color:#444}
+  .shelf-list{overflow-y:auto;padding:0 12px 6px;flex:1;min-height:0}
+  .shelf-list::-webkit-scrollbar{width:8px}
+  .shelf-list::-webkit-scrollbar-thumb{background:#dedede;border-radius:4px;border:2px solid #fff}
+  .book{
+    display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:10px;
+    cursor:pointer;position:relative;transition:background .12s;
+  }
+  .book:hover{background:#f7f7f7}
+  .book-main{flex:1;min-width:0}
+  .book-name{
+    font-size:13.5px;color:#262626;font-weight:500;display:flex;align-items:center;gap:7px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .book-name .cur{
+    font-size:10.5px;color:#4d6bfe;background:#eef2ff;border-radius:4px;
+    padding:1px 5px;font-weight:400;flex:0 0 auto;
+  }
+  .book-meta{font-size:11.5px;color:#a0a0a0;margin-top:3px;display:flex;gap:7px;align-items:center}
+  .book-meta i{width:2px;height:2px;background:#d0d0d0;border-radius:50%;display:inline-block}
+  .book-bar{height:3px;background:#f1f1f1;border-radius:2px;margin-top:8px;overflow:hidden}
+  .book-bar i{display:block;height:100%;background:#c7d1fb;border-radius:2px;transition:width .3s}
+  .book-del{
+    opacity:0;font-size:11.5px;color:#9a9a9a;padding:4px 8px;border-radius:6px;
+    flex:0 0 auto;transition:.14s;white-space:nowrap;
+  }
+  .book:hover .book-del{opacity:1}
+  .book-del:hover{background:#fdecec;color:#e05b5b}
+  .book-del.armed{background:#fdecec;color:#e05b5b;opacity:1}
+  .shelf-empty{padding:44px 20px;text-align:center;color:#b0b0b0;font-size:13px;line-height:1.9}
+  .shelf-foot{
+    padding:10px 20px 14px;font-size:11.5px;color:#b5b5b5;border-top:1px solid #f4f4f4;
+  }
+
+  /* toast */
+  #toast{
+    position:fixed;left:50%;top:14px;transform:translate(-50%,-8px);z-index:80;
+    background:rgba(38,38,38,.9);color:#fff;font-size:13px;padding:9px 16px;border-radius:9px;
+    opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;backdrop-filter:blur(4px);
+    max-width:70vw;text-align:center;line-height:1.5;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* emergency hide */
+  #hiddenScreen{
+    position:fixed;inset:0;z-index:100;background:#fff;display:none;
+    align-items:flex-start;justify-content:center;padding-top:90px;
+  }
+  #hiddenScreen.show{display:flex}
+  #hiddenScreen .doc{
+    width:640px;font-family:"Times New Roman","SimSun",serif;color:#111;
+  }
+  #hiddenScreen .doc h2{font-size:17px;font-weight:700;text-align:center;margin:0 0 26px;font-family:"Microsoft YaHei",sans-serif}
+  #hiddenScreen .doc p{font-size:14px;line-height:2;margin:0 0 10px;text-indent:2em;color:#1b1b1b}
+
+  @media (max-width:900px){
+    #sidebar{position:absolute;left:0;top:0;bottom:0;box-shadow:4px 0 24px rgba(0,0,0,.08)}
+    .thread{padding:56px 20px 8px}
+    .composer-wrap{padding:0 14px 4px}
+  }
+</style>
+</head>
+<body data-mode="read">
+
+<div id="app">
+  <aside id="sidebar">
+    <div class="sb-head">
+      <div class="brand">
+        <svg class="mark-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588zM11.581 18c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696 4.696 0 011.529-.039c2.132.312 3.946 1.265 5.468 2.774.868.86 1.525 1.887 2.202 2.891.72 1.066 1.494 2.082 2.48 2.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306 0 01.415-.287.302.302 0 01.2.288.306.306 0 01-.31.307.303.303 0 01-.304-.308zm3.11 1.596c-.2.081-.399.151-.59.16a1.245 1.245 0 01-.798-.254c-.274-.23-.47-.358-.552-.758a1.73 1.73 0 01.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559 0 01-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z" fill="#4D6BFE"></path></svg>
+        <svg class="word-svg" viewBox="0 0 131 24" fill="currentColor" aria-hidden="true"><path d="M117.986 0h-3.21v19.404h3.21V0zM8.7 5.215h1.83v2.838H8.7c-1.135 0-2.28.282-3.019 1.068-.738.785-1.016 1.99-1.016 3.194s.267 2.408 1.016 3.193c.75.786 1.884 1.068 3.018 1.068 1.135 0 2.28-.282 3.018-1.068.739-.785 1.017-1.99 1.017-3.193V.649h3.21v18.755h-3.21V18.21h-.589a3.498 3.498 0 01-.192.199c-.803.733-2.034.995-3.243.995-1.894 0-3.788-.472-5.03-1.78C2.44 16.314 2 14.303 2 12.303c0-2 .45-4 1.68-5.32 1.242-1.308 3.136-1.77 5.02-1.77zM57.564 18.9h-1.83v-2.837h1.83c1.134 0 2.28-.283 3.017-1.068.739-.785 1.017-1.99 1.017-3.194s-.267-2.408-1.017-3.194c-.749-.785-1.883-1.068-3.017-1.068s-2.28.283-3.018 1.068c-.738.786-1.017 1.99-1.017 3.194v11.655h-3.21V4.712h3.21v1.194h.59a3.42 3.42 0 01.186-.194l.005-.005c.803-.733 2.034-.995 3.243-.995 1.895 0 3.788.471 5.03 1.78 1.241 1.31 1.68 3.32 1.68 5.32 0 2-.45 4-1.68 5.319-1.23 1.32-3.135 1.77-5.019 1.77zM32.05 13.204v-1.14c0-2.064-.46-4.137-1.754-5.498-1.285-1.362-3.264-1.843-5.223-1.843-1.958 0-3.928.492-5.222 1.843-1.295 1.35-1.755 3.434-1.755 5.497 0 2.063.47 4.136 1.755 5.498 1.284 1.36 3.264 1.843 5.222 1.843 1.959 0 3.938-.493 5.223-1.843.663-.692 1.102-1.582 1.38-2.566h-3.168a5.026 5.026 0 01-.3.367c-.77.816-1.958 1.11-3.135 1.11-1.177 0-2.365-.304-3.136-1.11-.77-.807-1.048-2.063-1.048-3.299 0-1.236.278-2.482 1.049-3.298.77-.817 1.958-1.11 3.135-1.11 1.177 0 2.365.293 3.136 1.11.535.565.834 1.34.963 2.167H23.5v2.272h8.55zM48.168 12.063v1.141h-8.55v-2.272h5.671c-.129-.827-.428-1.602-.963-2.167-.77-.817-1.959-1.11-3.136-1.11s-2.365.293-3.136 1.11c-.77.816-1.049 2.063-1.049 3.298 0 1.236.279 2.492 1.05 3.299.77.806 1.958 1.11 3.135 1.11 1.177 0 2.365-.294 3.136-1.11.107-.116.203-.241.299-.367h3.168c-.278.985-.717 1.874-1.38 2.566-1.285 1.35-3.264 1.843-5.223 1.843s-3.938-.482-5.222-1.843c-1.285-1.362-1.756-3.435-1.756-5.498s.46-4.147 1.755-5.497c1.296-1.351 3.264-1.843 5.223-1.843s3.938.481 5.222 1.843c1.296 1.36 1.756 3.434 1.756 5.497zM78.635 18.315c-1.284.806-3.263 1.089-5.222 1.089-1.958 0-3.917-.294-5.212-1.09-1.295-.795-1.755-2.03-1.755-3.246h3.767c0 .472.225.953.824 1.257.6.304 1.54.419 2.462.419.92 0 1.851-.115 2.46-.42.611-.303.825-.784.825-1.256 0-.47-.214-.952-.824-1.256-.61-.304-1.627-.419-2.547-.419-1.777 0-3.563-.293-4.73-1.09-1.167-.795-1.584-2.03-1.584-3.245 0-1.215.417-2.44 1.584-3.246 1.167-.807 2.953-1.09 4.73-1.09 1.776 0 3.564.294 4.73 1.09 1.167.795 1.584 2.031 1.584 3.246h-3.264c0-.471-.203-.942-.749-1.257-.546-.303-1.391-.419-2.226-.419s-1.68.105-2.226.42c-.556.303-.75.785-.75 1.256 0 .47.204.942.75 1.256.545.304 1.316.42 2.151.42 1.959 0 3.938.292 5.222 1.088 1.295.796 1.756 2.032 1.756 3.246 0 1.215-.471 2.44-1.756 3.247zM96.507 12.063v1.141h-8.55v-2.272h5.672c-.129-.827-.429-1.602-.963-2.167-.771-.817-1.959-1.11-3.136-1.11s-2.366.293-3.136 1.11c-.77.816-1.048 2.063-1.048 3.298 0 1.236.278 2.492 1.048 3.299.77.806 1.959 1.11 3.135 1.11 1.178 0 2.366-.294 3.137-1.11.106-.116.203-.241.3-.367h3.167c-.279.985-.717 1.874-1.38 2.566-1.284 1.35-3.265 1.843-5.224 1.843-1.957 0-3.938-.482-5.222-1.843-1.284-1.362-1.754-3.435-1.754-5.498s.46-4.147 1.754-5.497c1.296-1.351 3.265-1.843 5.222-1.843 1.96 0 3.94.481 5.224 1.843 1.294 1.36 1.754 3.434 1.754 5.497zM112.624 13.204v-1.14c0-2.064-.46-4.137-1.754-5.498-1.285-1.362-3.265-1.843-5.223-1.843-1.959 0-3.928.492-5.222 1.843-1.296 1.35-1.756 3.434-1.756 5.497 0 2.063.471 4.136 1.756 5.498 1.284 1.36 3.263 1.843 5.222 1.843 1.958 0 3.938-.493 5.223-1.843.663-.692 1.102-1.582 1.38-2.566h-3.168l-.012.016c-.093.12-.185.24-.288.35-.77.817-1.957 1.11-3.135 1.11-1.177 0-2.365-.303-3.136-1.11-.77-.806-1.049-2.062-1.049-3.298 0-1.236.279-2.482 1.049-3.298.771-.817 1.959-1.11 3.136-1.11 1.178 0 2.365.293 3.135 1.11.536.565.836 1.34.964 2.167h-5.672v2.272h8.55zM128.73 19.404l-5.264-7.78 5.264-6.252h-3.97l-5.265 6.251 5.265 7.78h3.97z"></path></svg>
+      </div>
+      <div class="sb-head-acts">
+        <button class="icon-btn" id="searchBtn" title="搜索">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20.2 20.2 16.3 16.3"/></svg>
+        </button>
+        <button class="icon-btn" id="collapseBtn" title="收起侧边栏">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="15" rx="3.2"/><path d="M9.5 4.5v15"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="new-chat" id="newChat">
+      <span class="plus"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.35 10.4A8 8 0 1 1 5.1 15.9"/><path d="M2.1 17.1 5.3 16.35"/><path d="M9 5.7v6.6M5.7 9h6.6"/></svg></span>
+      <span id="newChatLabel">开启新对话</span>
+    </button>
+
+    <div class="sb-scroll" id="sbScroll">
+      <div class="group-title">今天
+        <button class="sort-btn" title="排序">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16"/><path d="m4 17 3 3 3-3"/><path d="M17 20V4"/><path d="m14 7 3-3 3 3"/></svg>
+        </button>
+      </div>
+      <div id="listToday"></div>
+      <div class="group-title">7天内</div>
+      <div id="listChapters"></div>
+      <div class="group-title">30天内</div>
+      <div id="listFake"></div>
+      <div class="empty-tip" id="sbEmpty">把 TXT 小说拖进窗口即可开始阅读</div>
+    </div>
+
+    <div class="sb-foot">
+      <div class="user-menu" id="userMenu">
+        <button data-m="shelf">我的书架<span class="k">B</span></button>
+        <button data-m="settings">阅读设置<span class="k">Ctrl+,</span></button>
+        <button data-m="help">快捷键<span class="k">?</span></button>
+        <button data-m="open">导入本地小说<span class="k">Ctrl+O</span></button>
+        <button data-m="collapse">收起侧边栏<span class="k">Ctrl+B</span></button>
+      </div>
+      <div class="user">
+        <span class="avatar">Q</span>
+        <span class="email">330******51@qq.com</span>
+        <button class="icon-btn" title="更多" id="userMore">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="main-top">
+      <button class="icon-btn" id="expandSb" title="展开侧边栏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="15" rx="3.2"/><path d="M9.5 4.5v15"/></svg>
+      </button>
+      <button class="icon-btn" id="tocBtn" title="目录">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.6" cy="6.5" r=".9" fill="currentColor" stroke="none"/><circle cx="4.6" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="4.6" cy="17.5" r=".9" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="icon-btn" id="shareBtn" title="分享">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13v6a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-6"/><path d="M12 15.5V4"/><path d="m8 7.6 4-3.6 4 3.6"/></svg>
+      </button>
+    </div>
+
+    <div class="chat-scroll" id="chatScroll">
+      <div class="home" id="home">
+        <div class="home-inner">
+          <h1><svg class="greet-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588zM11.581 18c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696 4.696 0 011.529-.039c2.132.312 3.946 1.265 5.468 2.774.868.86 1.525 1.887 2.202 2.891.72 1.066 1.494 2.082 2.48 2.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306 0 01.415-.287.302.302 0 01.2.288.306.306 0 01-.31.307.303.303 0 01-.304-.308zm3.11 1.596c-.2.081-.399.151-.59.16a1.245 1.245 0 01-.798-.254c-.274-.23-.47-.358-.552-.758a1.73 1.73 0 01.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559 0 01-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z"></path></svg>嗨！今天想聊些什么？</h1>
+          <div class="home-slot" id="homeSlot"></div>
+        </div>
+      </div>
+      <div class="thread" id="thread"></div>
+    </div>
+
+    <button id="toBottom" title="回到顶部">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>
+    </button>
+
+    <div class="composer-wrap" id="composerWrap">
+      <div class="composer" id="composer">
+        <div class="input" id="input" contenteditable="true" data-ph="给 DeepSeek 发送消息" spellcheck="false"></div>
+        <div class="composer-bar">
+          <div class="pills">
+            <button class="pill" id="pillThink">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .8 1.6V17h5.6v-1.6c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3Z"/></svg>
+              深度思考
+            </button>
+            <button class="pill" id="pillSearch">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3Z"/></svg>
+              智能搜索
+            </button>
+          </div>
+          <div class="comp-right">
+            <button class="icon-btn" id="attachBtn" title="上传文件">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5 12.4 19.6a5 5 0 0 1-7.1-7.1l8.2-8.2a3.4 3.4 0 0 1 4.8 4.8l-8.1 8.1a1.8 1.8 0 0 1-2.5-2.5l7.3-7.3"/></svg>
+            </button>
+            <button class="send" id="sendBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">
+        <span>内容由 AI 生成，请仔细甄别</span>
+        <span id="progress"></span>
+      </div>
+    </div>
+
+    <div class="panel" id="settings">
+      <div class="set-row">
+        <span>字号</span>
+        <div class="stepper">
+          <button data-fs="-1">−</button>
+          <span class="val" id="fsVal">16px</span>
+          <button data-fs="1">+</button>
+        </div>
+      </div>
+      <div class="set-row">
+        <span>行距</span>
+        <div class="stepper">
+          <button data-lh="-1">−</button>
+          <span class="val" id="lhVal">1.95</span>
+          <button data-lh="1">+</button>
+        </div>
+      </div>
+      <div class="set-row">
+        <span>段间距</span>
+        <div class="stepper">
+          <button data-pg="-1">−</button>
+          <span class="val" id="pgVal">13px</span>
+          <button data-pg="1">+</button>
+        </div>
+      </div>
+      <div class="set-row">
+        <span>首行缩进</span>
+        <div class="switch" id="swIndent"></div>
+      </div>
+      <div class="set-row">
+        <span>阅读进度显示</span>
+        <div class="switch on" id="swHud"></div>
+      </div>
+      <div class="set-hint">快捷键 <kbd>?</kbd> 查看全部 · <kbd>Esc</kbd> 一键退出</div>
+    </div>
+
+    <div id="help">
+      <div class="help-card">
+        <h3>快捷键</h3>
+        <div class="h-sub">摸鱼愉快，注意身后</div>
+        <div class="krow"><span>退出 / 返回伪装页</span><span><kbd>Esc</kbd></span></div>
+        <div class="krow"><span>紧急隐藏（白屏）</span><span><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>X</kbd></span></div>
+        <div class="krow"><span>章节目录</span><span><kbd>C</kbd></span></div>
+        <div class="krow"><span>书架 / 导入小说</span><span><kbd>B</kbd><kbd>Ctrl</kbd><kbd>O</kbd></span></div>
+        <div class="krow"><span>下一页</span><span><kbd>Space</kbd><kbd>→</kbd></span></div>
+        <div class="krow"><span>上一页</span><span><kbd>←</kbd></span></div>
+        <div class="krow"><span>下一章 / 上一章</span><span><kbd>]</kbd><kbd>[</kbd></span></div>
+        <div class="krow"><span>切换侧边栏</span><span><kbd>Ctrl</kbd><kbd>B</kbd></span></div>
+        <div class="krow"><span>字号加减</span><span><kbd>Ctrl</kbd><kbd>+</kbd><kbd>−</kbd></span></div>
+      </div>
+    </div>
+
+    <div id="toc">
+      <div class="toc-card">
+        <div class="toc-head">
+          <div class="toc-title">目录<span id="tocCount"></span></div>
+          <input class="toc-search" id="tocSearch" placeholder="搜索章节" autocomplete="off" spellcheck="false">
+          <button class="shelf-x" id="tocClose" title="关闭">✕</button>
+        </div>
+        <div class="toc-list" id="tocList"></div>
+        <div class="toc-foot"><span id="tocNow"></span><span>点击章节跳转 · 搜索可筛标题</span></div>
+      </div>
+    </div>
+
+    <div id="shelf">
+      <div class="shelf-card">
+        <div class="shelf-head">
+          <div class="shelf-title">书架<span id="shelfCount"></span></div>
+          <div class="shelf-acts">
+            <button class="shelf-import" id="shelfImport">+ 导入 TXT</button>
+            <button class="shelf-x" id="shelfClose" title="关闭">✕</button>
+          </div>
+        </div>
+        <div class="shelf-list" id="shelfList"></div>
+        <div class="shelf-foot">导入的书籍会保存在本地，下次打开自动续读 · 也可以直接把 TXT 拖进窗口</div>
+      </div>
+    </div>
+
+    <div id="hiddenScreen">
+      <div class="doc">
+        <h2>科室信息科工作例会纪要</h2>
+        <p>时间：2026 年 11 月 2 日 14:00 &nbsp; 地点：行政楼 3 楼小会议室</p>
+        <p>参会人员：信息科全体、医务科、护理部代表。</p>
+        <p>一、上周系统运行情况通报。HIS 系统日均调用量较前一周上升约 8%，存储过程执行超时告警 3 次，均集中在早高峰时段。经排查为报表统计任务与门诊挂号并发所致，已调整定时任务执行窗口。</p>
+        <p>二、病种统计报表口径问题。各科室反馈出院诊断与手术病种合计存在差异，需统一按主诊断归类，附属诊断不计入合计。相关 SQL 由信息科本周内完成修改并回归测试。</p>
+        <p>三、随访模块上线安排。超期随访口径调整为出院后第 29 日，需同步更新提醒规则与导出模板。</p>
+        <p>四、下一步工作。请各科室于本周五前提交需求确认单，逾期顺延至下个迭代。</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fileInput" accept=".txt,.md,.text,text/plain" style="display:none">
+
+<script>
+(function(){
+  "use strict";
+
+  /* ------------------------------------------------------------------ *
+   *  0. helpers
+   * ------------------------------------------------------------------ */
+  var $ = function(s){ return document.querySelector(s); };
+  var chatScroll = $('#chatScroll'), thread = $('#thread'), home = $('#home');
+  var composer = $('#composer'), composerWrap = $('#composerWrap'), homeSlot = $('#homeSlot');
+  var clamp = function(v,a,b){ return v<a?a:(v>b?b:v); };
+  var esc = function(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  };
+  function inputBlur(){
+    var a = document.activeElement;
+    if (a && a.isContentEditable) a.blur();
+  }
+
+  var ICONS = {
+    copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.4"/><path d="M15 5.5H6.5A2.5 2.5 0 0 0 4 8v8.5"/></svg>',
+    refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.5v5h-5"/></svg>',
+    up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 10.5v9.5H4.6a1.1 1.1 0 0 1-1.1-1.1v-7.3a1.1 1.1 0 0 1 1.1-1.1h2.9Z"/><path d="M7.5 10.5 11.7 3a2.1 2.1 0 0 1 3.3 2.2l-1 4.3h5.3a2.1 2.1 0 0 1 2.1 2.5l-1.5 6.4a2.1 2.1 0 0 1-2.1 1.6H7.5"/></svg>',
+    down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 13.5V4H4.6a1.1 1.1 0 0 0-1.1 1.1v7.3a1.1 1.1 0 0 0 1.1 1.1h2.9Z"/><path d="M7.5 13.5 11.7 21a2.1 2.1 0 0 0 3.3-2.2l-1-4.3h5.3a2.1 2.1 0 0 0 2.1-2.5l-1.5-6.4A2.1 2.1 0 0 0 17.8 4H7.5"/></svg>',
+    speaker:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="M15.2 9.2a4 4 0 0 1 0 5.6"/><path d="M17.8 6.4a7.6 7.6 0 0 1 0 11.2"/></svg>',
+    dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4.5 19.5h15"/></svg>',
+    chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>'
+  };
+
+  /* ------------------------------------------------------------------ *
+   *  1. demo novel
+   * ------------------------------------------------------------------ */
+  var DEMO_TITLE = '夜行列车';
+  var DEMO_TEXT = [
+    '第一章 夜车',
+    '',
+    '列车在午夜十一点四十分离开站台。',
+    '',
+    '陈默把行李箱塞进头顶的行李架，坐下来，才发现整节车厢只有他一个人。灯是暖黄色的，隔一排亮一盏，像谁刻意留下的一条虚线。窗外下着雨，雨点被风斜着推过来，在玻璃上拉出很长的痕，又很快被后面的雨覆盖掉。',
+    '',
+    '他这次回南方，是为了处理父亲留下的一套老房子。房子在城郊，六层，没有电梯，楼道里的声控灯坏了三年。中介说，这种房子现在不好卖，除非降价三成。他说好。',
+    '',
+    '手机在口袋里震了一下，是同事发来的消息：方案明天早上要。他回了一个“收到”，把手机扣在桌上，屏幕朝下。',
+    '',
+    '列车钻进隧道，灯光晃了一下。等它重新亮起来，他抬头，看见对面的座位上坐着一个人。',
+    '',
+    '第二章 对面的女人',
+    '',
+    '那是个穿深灰色大衣的女人，头发在脑后松松地绾着，膝上放着一只旧皮包。她没有行李，也没有看手机，只是安静地坐着，像已经在那里坐了很久。',
+    '',
+    '陈默下意识看了一眼车厢连接处的电子屏：下一站，青川，零时四十七分。他记得这趟车不在青川停。',
+    '',
+    '“你也是回青川的？”女人忽然开口。声音很轻，却在这节空车厢里显得格外清楚。',
+    '',
+    '他愣了一下：“我不在青川下。我到终点。”',
+    '',
+    '女人点点头，像是听到了一个早已知道的答案。“那还有四个小时。”她说，“够讲一个故事了。”',
+    '',
+    '第三章 第七节车厢',
+    '',
+    '列车在青川没有停。陈默看着站台的灯从窗外一格一格地滑过去，最后被雨吞掉。他忽然想起上车时列车员说的话：这趟车一共八节车厢，七号是餐车，夜里不开放。',
+    '',
+    '可他刚才去买水的时候，七号车厢的门是开着的。里面坐着七八个人，都低着头，桌上摆着一样的搪瓷杯，杯口冒着白气。没有人说话。',
+    '',
+    '“你去过七号了。”女人说。不是问句。',
+    '',
+    '陈默的后背有些发凉：“你怎么知道？”',
+    '',
+    '“因为你回来的时候，鞋底是干的。”她抬了抬下巴，“这趟车除了七号，哪里都在漏水。”',
+    '',
+    '第四章 雨停之前',
+    '',
+    '后来他记不清自己是怎么走到七号车厢门口的。门还是开着的，白气从里面漫出来，带着一点旧木头的味道。',
+    '',
+    '那些人都抬起头看他。他们的脸都很普通，普通到转身就会忘记。其中一个朝他笑了笑，把手边的搪瓷杯往前推了推。',
+    '',
+    '“坐吧。”那人说，“外面雨大。”',
+    '',
+    '陈默站在门口，忽然想起父亲最后一次给他打电话。那天也是这样大的雨，父亲在电话里说，家里的灯又坏了，你什么时候回来看看。他说，等忙完这阵子。',
+    '',
+    '父亲没等到那阵子忙完。',
+    '',
+    '第五章 终点站',
+    '',
+    '他醒过来的时候，天已经亮了。列车停在终点站，车厢里只剩下他一个人，行李箱还在头顶的架子上，位置一分没动。',
+    '',
+    '列车员在门口扫地，看见他，说：“到了，下车吧。”',
+    '',
+    '陈默站起来，问：“昨天晚上，七号车厢……”',
+    '',
+    '“七号？”列车员直起腰，“这趟车只有六节。你怕是做梦了。”',
+    '',
+    '他走出站台，雨已经停了。空气里有很淡的、旧木头的味道。他掏出手机，想给中介打个电话，说房子先不卖了。屏幕上还停着那条没回完的消息：方案明天早上要。',
+    '',
+    '他删掉了那句话，把手机放回口袋，往公交站走。阳光从云后面出来，照在湿漉漉的地面上，一格一格地亮过去，像谁刻意留下的一条虚线。'
+  ].join('\n');
+
+  /* ------------------------------------------------------------------ *
+   *  2. state
+   * ------------------------------------------------------------------ */
+  var S = {
+    books: [],          // shelf metadata
+    bookId: null,       // current book id
+    chapters: [],       // [{title, paras:[]}]
+    total: 0,
+    winStart: 0,
+    winEnd: -1,
+    idx: 0,
+    offsets: [],
+    name: '',
+    mode: 'read',
+    recent: [],
+    fontSize: 16,
+    lineHeight: 1.95,
+    pgap: 13,
+    indent: false,
+    hud: true,
+    savedScroll: 0,
+    canned: false
+  };
+
+  /* ------------------------------------------------------------------ *
+   *  3. parse
+   * ------------------------------------------------------------------ */
+  var CH_RE = /^[\s　]*(第\s*[0-9０-９零〇一二三四五六七八九十百千万两]+\s*[章节回卷集部篇幕][^\n]{0,40}|序章[^\n]{0,40}|楔子[^\n]{0,40}|引子[^\n]{0,40}|尾声[^\n]{0,40}|后记[^\n]{0,40}|番外[^\n]{0,40}|Chapter\s+\d+[^\n]{0,40})[\s　]*$/i;
+
+  function parseBook(text){
+    text = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+    var lines = text.split('\n');
+    var chapters = [], cur = null, buf = [];
+
+    function flush(){
+      if (cur){
+        cur.paras = buf.filter(function(p){ return p.length > 0; });
+        if (cur.paras.length || cur.title) chapters.push(cur);
+      }
+    }
+
+    for (var i = 0; i < lines.length; i++){
+      var raw = lines[i];
+      var line = raw.trim();
+      if (CH_RE.test(line) && line.length <= 60){
+        flush();
+        cur = { title: line.replace(/\s+/g, ' '), paras: [] };
+        buf = [];
+      } else {
+        if (!cur){ cur = { title: '正文', paras: [] }; }
+        var p = line.replace(/^[　\s]+/, '');
+        if (p) buf.push(p);
+        else if (buf.length && buf[buf.length - 1] !== '') buf.push('');
+      }
+    }
+    flush();
+
+    // no chapter markers at all -> split by length
+    if (chapters.length <= 1){
+      var all = text.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+      var joined = all.join('\n');
+      if (joined.length > 6000){
+        chapters = [];
+        var per = 3200, n = 0;
+        for (var s = 0; s < joined.length; s += per){
+          n++;
+          chapters.push({
+            title: '第 ' + n + ' 节',
+            paras: joined.slice(s, s + per).split('\n').filter(Boolean)
+          });
+        }
+      }
+    }
+    return chapters;
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  4. render chapter
+   * ------------------------------------------------------------------ */
+  function chapterEl(i){
+    var ch = S.chapters[i];
+    var el = document.createElement('section');
+    el.className = 'chapter';
+    el.dataset.idx = i;
+    var body = ch.paras.map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('');
+    el.innerHTML =
+      '<h1 class="ch-title">' + esc(ch.title) + '</h1>' +
+      '<div class="ch-body">' + body + '</div>' +
+      '<div class="msg-foot"><span>本回答由 AI 生成，内容仅供参考，请仔细甄别。</span>' +
+        '<div class="foot-acts">' +
+          '<button data-act="copy" title="复制">' + ICONS.copy + '</button>' +
+          '<button data-act="refresh" title="重新生成">' + ICONS.refresh + '</button>' +
+          '<button data-act="like" title="有帮助">' + ICONS.up + '</button>' +
+          '<button data-act="dislike" title="没帮助">' + ICONS.down + '</button>' +
+          '<button data-act="speak" title="朗读">' + ICONS.speaker + '</button>' +
+        '</div></div>';
+    return el;
+  }
+
+  function refreshOffsets(){
+    var base = chatScroll.getBoundingClientRect().top - chatScroll.scrollTop;
+    S.offsets = [];
+    for (var i = 0; i < thread.children.length; i++){
+      S.offsets.push(thread.children[i].getBoundingClientRect().top - base);
+    }
+  }
+
+  function appendNext(){
+    if (S.winEnd + 1 >= S.total) return false;
+    var i = S.winEnd + 1;
+    thread.appendChild(chapterEl(i));
+    S.winEnd = i;
+    refreshOffsets();
+    return true;
+  }
+
+  function prependPrev(){
+    if (S.winStart - 1 < 0) return false;
+    var i = S.winStart - 1;
+    var h0 = chatScroll.scrollHeight;
+    thread.insertBefore(chapterEl(i), thread.firstChild);
+    S.winStart = i;
+    refreshOffsets();
+    chatScroll.scrollTop += (chatScroll.scrollHeight - h0);
+    refreshOffsets();
+    return true;
+  }
+
+  function pruneTop(){
+    while (thread.children.length > 9 && (S.idx - S.winStart) > 4){
+      var first = thread.firstChild;
+      var h = first.offsetHeight;
+      thread.removeChild(first);
+      S.winStart++;
+      chatScroll.scrollTop -= h;
+    }
+    refreshOffsets();
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  5. open / navigate
+   * ------------------------------------------------------------------ */
+  function openChapter(i, keepScroll){
+    if (!S.total) return;
+    i = clamp(i, 0, S.total - 1);
+    S.canned = false;
+    document.title = 'DeepSeek';
+    var fakeOn = document.querySelectorAll('#listFake .item.active');
+    for (var k = 0; k < fakeOn.length; k++) fakeOn[k].classList.remove('active');
+    thread.innerHTML = '';
+    S.winStart = i;
+    S.winEnd = i - 1;
+    S.idx = i;
+    appendNext();
+    appendNext();
+    refreshOffsets();
+    if (!keepScroll) chatScroll.scrollTop = 0;
+    lastWinStart = -1;
+    updateActive();
+    updateProgress();
+    saveProgress();
+  }
+
+  function nextChapter(){
+    if (S.mode !== 'read') setMode('read');
+    if (S.idx + 1 < S.total) openChapter(S.idx + 1);
+  }
+  function prevChapter(){
+    if (S.mode !== 'read') setMode('read');
+    if (S.idx > 0) openChapter(S.idx - 1);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  6. scroll handling
+   * ------------------------------------------------------------------ */
+  var ticking = false;
+  chatScroll.addEventListener('scroll', function(){
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function(){ ticking = false; onScroll(); });
+  });
+
+  function onScroll(){
+    if (S.mode !== 'read' || !S.total || S.canned) return;
+    var st = chatScroll.scrollTop,
+        vh = chatScroll.clientHeight,
+        sh = chatScroll.scrollHeight;
+
+    if (sh - st - vh < 900){ appendNext(); }
+    if (st < 240 && S.winStart > 0){ prependPrev(); }
+
+    var cur = S.winStart;
+    for (var k = 0; k < S.offsets.length; k++){
+      if (S.offsets[k] <= st + 96) cur = S.winStart + k; else break;
+    }
+    if (cur !== S.idx){ S.idx = cur; updateActive(); }
+
+    if (S.idx - S.winStart > 6) pruneTop();
+
+    updateProgress();
+    saveProgress();
+
+    var atTop = st < 120;
+    $('#toBottom').classList.toggle('show', st > 600);
+    $('#toBottom').title = atTop ? '继续阅读' : '回到顶部';
+  }
+
+  function percentOf(){
+    if (!S.total) return 0;
+    var st = chatScroll.scrollTop, vh = chatScroll.clientHeight, frac = 0;
+    var k = S.idx - S.winStart;                       // 当前章在窗口里的位置
+    if (S.offsets.length > k + 1){
+      var a = S.offsets[k], b = S.offsets[k + 1];
+      frac = clamp((st + vh * 0.4 - a) / Math.max(1, (b - a)), 0, 1);
+    }
+    return clamp((S.idx + frac) / S.total, 0, 1);
+  }
+
+  // 当前章内部已经读了多少像素。
+  // 注意：不能直接存 chatScroll.scrollTop —— 那是整个滚动容器的绝对值，
+  // 容器里挂了几章、窗口从哪章开始，都会影响它；恢复时窗口重新从当前章开始，
+  // 同一个数值就会落到别的章去（重启后位置跑偏的元凶）。
+  function offsetInChapter(){
+    if (!S.total || !S.offsets) return 0;
+    var k = S.idx - S.winStart;
+    var base = (k >= 0 && S.offsets[k] != null) ? S.offsets[k] : 0;
+    return Math.round(chatScroll.scrollTop - base);   // 允许负数：停在章首上方时是负的
+  }
+
+  function updateProgress(){
+    if (!S.total){ $('#progress').textContent = ''; return; }
+    $('#progress').textContent = '第 ' + (S.idx + 1) + '/' + S.total + ' 章 · ' +
+      (percentOf() * 100).toFixed(1) + '%';
+  }
+
+  function pageDown(){
+    if (S.mode !== 'read') return;
+    chatScroll.scrollBy({ top: chatScroll.clientHeight * 0.86, behavior: 'smooth' });
+  }
+  function pageUp(){
+    if (S.mode !== 'read') return;
+    chatScroll.scrollBy({ top: -chatScroll.clientHeight * 0.86, behavior: 'smooth' });
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  7. sidebar
+   * ------------------------------------------------------------------ */
+  var listChapters = $('#listChapters'), listFake = $('#listFake'), sbScroll = $('#sbScroll');
+  var listToday = $('#listToday');
+  var allCursor = 0, ALL_CHUNK = 60, lastTodayIdx = -1;
+  var FAKE = [
+    '存储过程21000错误解决',
+    '病种统计报表API改造',
+    '超期随访29日算第一天',
+    '出院诊断主键冲突分析',
+    '三个查询加函数索引',
+    '诊断手术病种合计查询',
+    '抗菌药物医嘱提取结果',
+    '化疗证据提取为空',
+    '姓名拼音全拼',
+    '临时表结构已确认',
+    'Pallim procedure not found',
+    '无输血记录输出空数组'
+  ];
+
+  // 伪装状态下「今天 / 7天内」显示的工作对话（不能出现章节名）
+  var HOME_TODAY = 'SQL语法错误修复';
+  var HOME_WEEK = [
+    '重跑月数据清理方案',
+    '病案查询去重改法',
+    '函数签名不匹配报错',
+    '修复scope函数类型错误',
+    '病案时效任务来源',
+    'PostgreSQL 22003 error fix',
+    '手术相关文书清单',
+    '医疗培养记录提取',
+    '时间戳空字符串报错修复',
+    '指标逻辑替换咨询',
+    'SQL语法错误Where修复'
+  ];
+
+  // 标题是 AI 生成的会话摘要，正文复用语义最接近的那条回答
+  var ALIAS = {
+    'SQL语法错误修复': '存储过程21000错误解决',
+    '函数签名不匹配报错': 'Pallim procedure not found',
+    '病案时效任务来源': '超期随访29日算第一天',
+    '医疗培养记录提取': '抗菌药物医嘱提取结果'
+  };
+
+  function itemEl(i, quiet){
+    var ch = S.chapters[i];
+    var d = document.createElement('div');
+    if (!ch) return d;
+    d.className = 'item' + (i === S.idx && !quiet ? ' active' : '');
+    d.dataset.idx = i;
+    d.title = ch.title;
+    d.innerHTML = '<span class="t">' + esc(ch.title) + '</span><span class="more">···</span>';
+    d.addEventListener('click', function(){
+      if (S.mode !== 'read') setMode('read');
+      openChapter(i);
+    });
+    return d;
+  }
+
+  function fakeItemEl(title){
+    var d = document.createElement('div');
+    d.className = 'item';
+    d.title = title;
+    d.innerHTML = '<span class="t">' + esc(title) + '</span><span class="more">···</span>';
+    d.addEventListener('click', function(){
+      var all = document.querySelectorAll('.item.active');
+      for (var k = 0; k < all.length; k++) all[k].classList.remove('active');
+      d.classList.add('active');
+      showCanned(title);
+    });
+    return d;
+  }
+
+  function renderFake(){
+    listFake.innerHTML = '';
+    FAKE.forEach(function(title){ listFake.appendChild(fakeItemEl(title)); });
+  }
+
+  // 伪装态：今天 / 7天内 全部换成工作对话，一个章节名都不露
+  function renderFakeGroups(curTitle){
+    var all = document.querySelectorAll('.item.active');
+    for (var k = 0; k < all.length; k++) all[k].classList.remove('active');
+
+    // 当前会话属于「近期」这一批，才把它顶到「今天」并高亮；否则今天固定放最近一条
+    var inRecent = !!curTitle && (curTitle === HOME_TODAY || HOME_WEEK.indexOf(curTitle) >= 0);
+    var today = inRecent ? curTitle : HOME_TODAY;
+
+    listToday.innerHTML = '';
+    var t = fakeItemEl(today);
+    if (inRecent) t.classList.add('active');
+    listToday.appendChild(t);
+
+    listChapters.innerHTML = '';
+    var n = 0;
+    for (var i = 0; i < HOME_WEEK.length && n < 10; i++){
+      if (HOME_WEEK[i] === today) continue;
+      listChapters.appendChild(fakeItemEl(HOME_WEEK[i]));
+      n++;
+    }
+    lastTodayIdx = -1;
+    lastWinStart = -1;
+    lastWinIdx = -1;
+  }
+
+  var WIN = 10, lastWinStart = -1, lastWinIdx = -1;
+
+  function buildSidebar(){
+    listChapters.innerHTML = '';
+    listToday.innerHTML = '';
+    lastTodayIdx = -1;
+    lastWinStart = -1;
+    lastWinIdx = -1;
+    renderWindow(true);
+    renderFake();
+    $('#sbEmpty').style.display = 'none';
+    $('#newChatLabel').textContent = '开启新对话';
+  }
+
+  function renderToday(){
+    if (!S.total || !S.chapters[S.idx]){ listToday.innerHTML = ''; lastTodayIdx = -1; return; }
+    if (lastTodayIdx !== S.idx || !listToday.children.length){
+      lastTodayIdx = S.idx;
+      listToday.innerHTML = '';
+      listToday.appendChild(itemEl(S.idx));
+    }
+    var t = listToday.firstElementChild;
+    if (t) t.classList.add('active');   // 当前章只在「今天」里高亮
+  }
+
+  // 7天内：连续 10 章，以当前章为中心，**当前章也在里面**（章号不能断档）；
+  // 高亮只留在「今天」那一条，避免两处同时点亮
+  function renderWindow(force){
+    if (!S.total){ listChapters.innerHTML = ''; lastWinStart = -1; lastWinIdx = -1; return; }
+    var n = Math.min(WIN, S.total);
+    var start = clamp(S.idx - Math.floor((n - 1) / 2), 0, Math.max(0, S.total - n));
+    if (force || start !== lastWinStart || lastWinIdx !== S.idx){
+      lastWinStart = start;
+      lastWinIdx = S.idx;
+      var frag = document.createDocumentFragment();
+      for (var i = start; i < start + n && i < S.total; i++){
+        frag.appendChild(itemEl(i, true));
+      }
+      listChapters.innerHTML = '';
+      listChapters.appendChild(frag);
+    }
+  }
+
+  function updateActive(){
+    renderToday();
+    renderWindow(false);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  8. mode (read / home disguise)
+   * ------------------------------------------------------------------ */
+  function syncComposer(m){
+    if (m === 'home'){
+      homeSlot.appendChild(composer);
+      composer.classList.add('in-home');
+    } else {
+      composerWrap.insertBefore(composer, composerWrap.firstChild);
+      composer.classList.remove('in-home');
+    }
+  }
+
+  function setMode(m){
+    // 必须在切 data-mode 之前存：home 模式下 .thread 被隐藏，滚动位置会被浏览器清零
+    if (m === 'home' && S.mode === 'read' && S.total && !S.canned){
+      S.savedScroll = chatScroll.scrollTop;
+    }
+    if (m === 'read' && S.canned){
+      S.mode = 'read';
+      document.body.dataset.mode = 'read';
+      document.title = 'DeepSeek';
+      syncComposer('read');
+      openChapter(S.idx, true);
+      return;
+    }
+    S.mode = m;
+    document.body.dataset.mode = m;
+    syncComposer(m);
+    if (m === 'home'){
+      chatScroll.scrollTop = 0;
+      document.title = 'DeepSeek - 开启新对话';
+      renderFakeGroups(null);
+      $('#toBottom').classList.remove('show');
+      $('#progress').textContent = '';
+    } else {
+      document.title = 'DeepSeek';
+      chatScroll.scrollTop = S.savedScroll;
+      lastTodayIdx = -1;
+      lastWinStart = -1;
+      lastWinIdx = -1;
+      updateActive();
+      updateProgress();
+    }
+    $('#settings').classList.remove('show');
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  9. storage — 书架（IndexedDB）
+   * ------------------------------------------------------------------ */
+  var DB = null, DB_NAME = 'dsreader';
+  var ST_BOOKS = 'books', ST_TEXT = 'texts';
+
+  function dbOpen(){
+    return new Promise(function(resolve){
+      var req;
+      try { req = indexedDB.open(DB_NAME, 1); }
+      catch (e){ return resolve(null); }
+      req.onupgradeneeded = function(e){
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(ST_BOOKS)) db.createObjectStore(ST_BOOKS, { keyPath: 'id' });
+        if (!db.objectStoreNames.contains(ST_TEXT)) db.createObjectStore(ST_TEXT, { keyPath: 'id' });
+      };
+      req.onsuccess = function(e){ DB = e.target.result; resolve(DB); };
+      req.onerror = function(){ resolve(null); };
+    });
+  }
+  function dbTx(store, mode, fn){
+    return new Promise(function(resolve){
+      if (!DB) return resolve(null);
+      try {
+        var tx = DB.transaction(store, mode);
+        var req = fn(tx.objectStore(store));
+        tx.oncomplete = function(){ resolve(req ? req.result : true); };
+        tx.onerror = function(){ resolve(null); };
+        tx.onabort = function(){ resolve(null); };
+      } catch (e){ resolve(null); }
+    });
+  }
+  function dbAll(store){
+    return dbTx(store, 'readonly', function(os){ return os.getAll(); }).then(function(r){ return r || []; });
+  }
+  function dbGet(store, id){
+    return dbTx(store, 'readonly', function(os){ return os.get(id); }).then(function(r){ return r || null; });
+  }
+  function dbPut(store, val){
+    return dbTx(store, 'readwrite', function(os){ return os.put(val); });
+  }
+  function dbDel(store, id){
+    return dbTx(store, 'readwrite', function(os){ return os.delete(id); });
+  }
+  function newId(){
+    return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+  function metaOf(rec){
+    return {
+      id: rec.id, name: rec.name, chapterCount: rec.chapterCount || 0,
+      size: rec.size || 0, addedAt: rec.addedAt || Date.now(),
+      lastReadAt: rec.lastReadAt || Date.now(), idx: rec.idx || 0,
+      scroll: rec.scroll || 0, percent: rec.percent || 0
+    };
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 10. book loading
+   * ------------------------------------------------------------------ */
+  function decodeBuffer(buf){
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+    } catch (e){
+      try { return new TextDecoder('gbk').decode(buf); }
+      catch (_){ return new TextDecoder('utf-8').decode(buf); }
+    }
+  }
+
+  var CURRENT = null;
+
+  function indexOfBook(id){
+    for (var i = 0; i < S.books.length; i++) if (S.books[i].id === id) return i;
+    return -1;
+  }
+
+  function openBookRecord(meta, text){
+    var chapters = parseBook(text);
+    if (!chapters.length){ toast('没有解析到正文内容'); return false; }
+    // flush the book we are leaving before swapping CURRENT
+    clearTimeout(saveTimer);
+    if (CURRENT && CURRENT.id && CURRENT.id !== meta.id){
+      CURRENT.idx = S.idx;
+      CURRENT.scroll = offsetInChapter();
+      CURRENT.lastReadAt = Date.now();
+      dbPut(ST_BOOKS, metaOf(CURRENT));
+    }
+    CURRENT = meta;
+    CURRENT.text = text;
+    var at = indexOfBook(meta.id);
+    if (at >= 0) S.books[at] = meta; else S.books.push(meta);
+    S.bookId = meta.id;
+    S.chapters = chapters;
+    S.total = chapters.length;
+    S.name = meta.name;
+    S.canned = false;
+    S.idx = clamp(meta.idx || 0, 0, S.total - 1);
+    buildSidebar();
+    setMode('read');
+    openChapter(S.idx, true);
+    // meta.scroll 是「本章内已读的像素」，不是容器的绝对 scrollTop。
+    // 恢复时要把本章在新容器里的起始偏移加回去，否则会整体上移一个 padding 的高度。
+    var off = meta.scroll || 0;
+    var k0 = S.idx - S.winStart;
+    var base = (k0 >= 0 && S.offsets[k0] != null) ? S.offsets[k0] : 0;
+    var chH = (S.offsets[k0 + 1] != null) ? (S.offsets[k0 + 1] - base) : 0;
+    if (chH > 200 && off > chH - 200) off = chH - 200;   // 老数据（绝对 scrollTop）别跳到下一章
+    chatScroll.scrollTop = Math.max(0, base + off);
+    setTimeout(function(){
+      refreshOffsets();
+      // 布局稳定后再校一次，消掉恢复瞬间算出的几像素误差
+      var k = S.idx - S.winStart;
+      var b2 = (k >= 0 && S.offsets[k] != null) ? S.offsets[k] : 0;
+      var want = Math.max(0, b2 + off);
+      if (Math.abs(chatScroll.scrollTop - want) > 1) chatScroll.scrollTop = want;
+      updateActive();
+      updateProgress();
+    }, 60);
+    setTimeout(function(){
+      if (!S.total || S.canned) return;
+      refreshOffsets();
+      var k = S.idx - S.winStart;
+      var b3 = (k >= 0 && S.offsets[k] != null) ? S.offsets[k] : 0;
+      var want = Math.max(0, b3 + off);
+      if (Math.abs(chatScroll.scrollTop - want) > 1) chatScroll.scrollTop = want;
+    }, 320);
+    try { localStorage.setItem('dsr:lastBook', meta.id); } catch (e){}
+    if (meta.chapterCount !== S.total){
+      meta.chapterCount = S.total;
+      dbPut(ST_BOOKS, metaOf(meta));
+    }
+    renderShelf();
+    return true;
+  }
+
+  function openBook(id){
+    return dbGet(ST_BOOKS, id).then(function(meta){
+      if (!meta) return false;
+      return dbGet(ST_TEXT, id).then(function(t){
+        if (!t || !t.text){ toast('这本书的正文丢失了，请重新导入'); return false; }
+        return openBookRecord(meta, t.text);
+      });
+    });
+  }
+
+  function importBook(file){
+    var fr = new FileReader();
+    fr.onload = function(){
+      var text = decodeBuffer(fr.result);
+      var chapters = parseBook(text);
+      if (!chapters.length){ toast('没有解析到正文内容'); return; }
+      var name = file.name.replace(/\.(txt|md|text)$/i, '') || '未命名';
+      var rec = {
+        id: newId(), name: name, chapterCount: chapters.length, size: text.length,
+        addedAt: Date.now(), lastReadAt: Date.now(), idx: 0, scroll: 0, percent: 0
+      };
+      dbPut(ST_TEXT, { id: rec.id, text: text })
+        .then(function(){ return dbPut(ST_BOOKS, rec); })
+        .then(function(){
+          S.books.push(rec);
+          renderShelf();
+          openBookRecord(rec, text);
+          closeShelf();
+          toast('已导入《' + name + '》· ' + chapters.length + ' 章');
+        });
+    };
+    fr.readAsArrayBuffer(file);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 11. persistence
+   * ------------------------------------------------------------------ */
+  var saveTimer = null;
+  function saveProgress(immediate){
+    if (!S.total || !CURRENT) return;
+    clearTimeout(saveTimer);
+    var doSave = function(){
+      CURRENT.idx = S.idx;
+      CURRENT.scroll = offsetInChapter();
+      CURRENT.percent = Math.round(percentOf() * 1000) / 10;
+      CURRENT.lastReadAt = Date.now();
+      dbPut(ST_BOOKS, metaOf(CURRENT));
+    };
+    // 关页面/切后台时必须同步写，setTimeout(0) 在 pagehide 里可能根本不会执行
+    if (immediate) doSave();
+    else saveTimer = setTimeout(doSave, 600);
+  }
+
+  function saveSettings(){
+    try {
+      localStorage.setItem('dsr:type', JSON.stringify({
+        fontSize: S.fontSize, lineHeight: S.lineHeight, pgap: S.pgap,
+        indent: S.indent, hud: S.hud
+      }));
+    } catch (e){}
+  }
+
+  function applyType(){
+    document.documentElement.style.setProperty('--fs', S.fontSize + 'px');
+    document.documentElement.style.setProperty('--lh', S.lineHeight);
+    document.documentElement.style.setProperty('--pgap', S.pgap + 'px');
+    document.body.classList.toggle('indent', S.indent);
+    document.body.classList.toggle('hide-hud', !S.hud);
+    $('#fsVal').textContent = S.fontSize + 'px';
+    $('#lhVal').textContent = S.lineHeight.toFixed(2);
+    $('#pgVal').textContent = S.pgap + 'px';
+    $('#swIndent').classList.toggle('on', S.indent);
+    $('#swHud').classList.toggle('on', S.hud);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 11. toast / help
+   * ------------------------------------------------------------------ */
+  var toastTimer = null;
+  function toast(msg){
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 11.5 书架
+   * ------------------------------------------------------------------ */
+  var shelfEl = $('#shelf'), shelfList = $('#shelfList'), shelfCount = $('#shelfCount');
+
+  function openShelf(){
+    renderShelf();
+    shelfEl.classList.add('show');
+    inputBlur();
+  }
+  function closeShelf(){
+    shelfEl.classList.remove('show');
+  }
+
+  function fmtTime(ts){
+    if (!ts) return '';
+    var d = new Date(ts), now = new Date();
+    var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
+    if (d.toDateString() === now.toDateString()){
+      return '今天 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+    var diff = (now - d) / 86400000;
+    if (diff < 2) return '昨天 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    if (diff < 7) return Math.floor(diff) + ' 天前';
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  }
+
+  function renderShelf(){
+    if (!shelfList) return;
+    var list = S.books.slice().sort(function(a, b){
+      return (b.lastReadAt || 0) - (a.lastReadAt || 0);
+    });
+    shelfCount.textContent = list.length ? list.length + ' 本 · 本地保存' : '';
+    shelfList.innerHTML = '';
+    if (!list.length){
+      shelfList.innerHTML = '<div class="shelf-empty">书架还是空的<br>点右上角「导入 TXT」，或把文件直接拖进窗口</div>';
+      return;
+    }
+    list.forEach(function(b){
+      var row = document.createElement('div');
+      row.className = 'book';
+      row.dataset.id = b.id;
+      var pct = clamp(b.percent || 0, 0, 100);
+      row.innerHTML =
+        '<div class="book-main">' +
+          '<div class="book-name">' + esc(b.name) +
+            (b.id === S.bookId ? '<span class="cur">在读</span>' : '') + '</div>' +
+          '<div class="book-meta"><span>' + (b.chapterCount || 0) + ' 章</span><i></i>' +
+            '<span>第 ' + ((b.idx || 0) + 1) + ' 章</span><i></i>' +
+            '<span>' + pct.toFixed(1) + '%</span><i></i>' +
+            '<span>' + fmtTime(b.lastReadAt) + '</span></div>' +
+          '<div class="book-bar"><i style="width:' + Math.max(1.5, pct) + '%"></i></div>' +
+        '</div>' +
+        '<button class="book-del" data-del="' + b.id + '">删除</button>';
+      shelfList.appendChild(row);
+    });
+  }
+
+  function resetBookView(){
+    CURRENT = null;
+    S.bookId = null;
+    S.chapters = [];
+    S.total = 0;
+    S.name = '';
+    thread.innerHTML = '';
+    listChapters.innerHTML = '';
+    listToday.innerHTML = '';
+    lastWinStart = -1;
+    lastTodayIdx = -1;
+    $('#progress').textContent = '';
+    $('#sbEmpty').style.display = '';
+    renderFake();
+    setMode('home');
+  }
+
+  shelfList.addEventListener('click', function(e){
+    var del = e.target.closest('[data-del]');
+    if (del){
+      e.stopPropagation();
+      if (!del.classList.contains('armed')){
+        del.classList.add('armed');
+        del.textContent = '确认删除';
+        setTimeout(function(){
+          del.classList.remove('armed');
+          del.textContent = '删除';
+        }, 2600);
+        return;
+      }
+      var id = del.dataset.del;
+      dbDel(ST_BOOKS, id);
+      dbDel(ST_TEXT, id);
+      S.books = S.books.filter(function(b){ return b.id !== id; });
+      toast('已从书架删除');
+      if (id === S.bookId){
+        if (S.books.length) openBook(S.books[0].id);
+        else resetBookView();
+      }
+      renderShelf();
+      return;
+    }
+    var row = e.target.closest('.book');
+    if (row){
+      openBook(row.dataset.id).then(function(ok){ if (ok) closeShelf(); });
+    }
+  });
+
+  /* ------------------------------------------------------------------ *
+   * 11.6 目录
+   * ------------------------------------------------------------------ */
+  var tocEl = $('#toc'), tocList = $('#tocList'), tocSearch = $('#tocSearch');
+  var tocCount = $('#tocCount'), tocNow = $('#tocNow');
+  var tocTimer = null;
+
+  function openToc(){
+    if (!S.total){ toast('还没有打开的书'); return; }
+    tocSearch.value = '';
+    renderToc('');
+    tocEl.classList.add('show');
+    inputBlur();
+    requestAnimationFrame(function(){
+      var cur = tocList.querySelector('.toc-item.on');
+      if (cur) cur.scrollIntoView({ block: 'center' });
+    });
+  }
+  function closeToc(){ tocEl.classList.remove('show'); }
+
+  function renderToc(q){
+    q = (q || '').trim().toLowerCase();
+    var html = '', shown = 0;
+    for (var i = 0; i < S.total; i++){
+      var t = S.chapters[i].title;
+      if (q && t.toLowerCase().indexOf(q) < 0) continue;
+      shown++;
+      html += '<button class="toc-item' + (i === S.idx ? ' on' : '') + '" data-i="' + i + '">' +
+        '<span class="n">' + (i + 1) + '</span><span class="t">' + esc(t) + '</span></button>';
+    }
+    tocList.innerHTML = html || '<div class="toc-empty">没有找到匹配的章节</div>';
+    tocCount.textContent = shown + ' / ' + S.total + ' 章';
+    tocNow.textContent = '当前：第 ' + (S.idx + 1) + ' 章 · ' + S.name;
+  }
+
+  tocList.addEventListener('click', function(e){
+    var it = e.target.closest('.toc-item');
+    if (!it) return;
+    closeToc();
+    openChapter(+it.dataset.i);
+  });
+
+  tocSearch.addEventListener('input', function(){
+    clearTimeout(tocTimer);
+    var v = this.value;
+    tocTimer = setTimeout(function(){ renderToc(v); }, 110);
+  });
+  tocSearch.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      var first = tocList.querySelector('.toc-item');
+      if (first){ closeToc(); openChapter(+first.dataset.i); }
+    }
+  });
+
+  /* ------------------------------------------------------------------ *
+   * 12. canned answer (for the disguise home chips)
+   * ------------------------------------------------------------------ */
+  function codeBlock(lang, body){
+    return '<div class="code"><div class="code-head"><span>' + lang + '</span><div class="code-acts">' +
+      '<button data-code="copy">' + ICONS.copy + '复制</button>' +
+      '<button data-code="dl">' + ICONS.dl + '下载</button></div></div><pre>' + body + '</pre></div>';
+  }
+
+  var CANNED = {
+
+    '存储过程21000错误解决': {
+      secs: 23,
+      q: '存储过程报 SQLSTATE 21000，麻烦看下这段：\n\n```sql\nSELECT u.kscode,\n       (SELECT d.loginname\n          FROM Tays_UserInfo_szks d\n         WHERE d.kscode = :kscode) AS login_name\n  FROM Tays_Dept u\n WHERE u.status = \'1\';\n```\n\n之前一直没问题，上周换了一批科室数据之后开始报错。',
+      think: '用户贴的是存储过程报 21000，没说是哪个库。PG、金仓、openGauss 这一系里 21000 都是 cardinality violation，最常见就是标量子查询返回多行。他这段里 (SELECT loginname FROM Tays_UserInfo_szks d WHERE d.kscode = :kscode) 用的是科室编码，一个科室挂多人很正常，子查询必然多行。要先给确认行数的 SQL，再按业务口径给几种改法，顺便提醒 NOT IN 遇到 NULL 的坑。',
+      a: [
+        '<p><b>21000</b> 是 <code>cardinality violation</code>。在 PostgreSQL、人大金仓、openGauss 这一类库上，九成以上是<b>标量子查询返回了多行</b>。你这段正好是典型写法：</p>',
+        codeBlock('sql', `SELECT u.kscode,
+       (<span class="k">SELECT</span> d.loginname
+          <span class="k">FROM</span> Tays_UserInfo_szks d
+         <span class="k">WHERE</span> d.kscode = :kscode) <span class="k">AS</span> login_name
+  <span class="k">FROM</span> Tays_Dept u
+ <span class="k">WHERE</span> u.status = <span class="s">'1'</span>;`),
+        '<h2>直接原因</h2>',
+        '<ul>',
+        '<li><b>kscode 不唯一</b>：<code>Tays_UserInfo_szks</code> 里一个科室编码挂着多个人员，子查询返回 2 行以上，赋值给单个字段就报 21000。你说是换了科室数据之后才报，基本就是这个。</li>',
+        '<li><b>NULL 陷阱</b>：如果外层用的是 <code>NOT IN (子查询)</code>，子查询里只要出现一个 NULL，整个条件恒为 NULL，数据会被静默过滤掉。这种不报错，但结果是错的，比报错更难查。</li>',
+        '</ul>',
+        '<h2>先确认行数</h2>',
+        codeBlock('sql', `<span class="k">SELECT</span> kscode, <span class="f">COUNT</span>(*) <span class="k">AS</span> cnt
+  <span class="k">FROM</span> Tays_UserInfo_szks
+ <span class="k">GROUP BY</span> kscode
+<span class="k">HAVING</span> <span class="f">COUNT</span>(*) &gt; <span class="n">1</span>
+ <span class="k">ORDER BY</span> cnt <span class="k">DESC</span>;`),
+        '<p>如果这条查出来有记录，就不要再在子查询上打补丁了，得先定业务口径：<b>一个科室到底该取谁</b>。</p>',
+        '<h2>三种改法</h2>',
+        '<h3>一、取最新一条（推荐）</h3>',
+        codeBlock('sql', `<span class="k">SELECT</span> u.kscode, t.loginname
+  <span class="k">FROM</span> Tays_Dept u
+  <span class="k">LEFT JOIN LATERAL</span> (
+        <span class="k">SELECT</span> d.loginname
+          <span class="k">FROM</span> Tays_UserInfo_szks d
+         <span class="k">WHERE</span> d.kscode = u.kscode
+           <span class="k">AND</span> d.status = <span class="s">'1'</span>
+         <span class="k">ORDER BY</span> d.update_time <span class="k">DESC</span>, d.id
+         <span class="k">LIMIT</span> <span class="n">1</span>
+  ) t <span class="k">ON TRUE</span>
+ <span class="k">WHERE</span> u.status = <span class="s">'1'</span>;`),
+        '<h3>二、只要一个值，用聚合压平</h3>',
+        codeBlock('sql', `<span class="k">SELECT</span> u.kscode,
+       (<span class="k">SELECT</span> <span class="f">MIN</span>(d.loginname)
+          <span class="k">FROM</span> Tays_UserInfo_szks d
+         <span class="k">WHERE</span> d.kscode = u.kscode) <span class="k">AS</span> login_name
+  <span class="k">FROM</span> Tays_Dept u;`),
+        '<p>这种写法不会报错，但取到的是字典序最小的那个，只有确实不关心取谁时才用。</p>',
+        '<h3>三、真要全部人，就聚合成数组</h3>',
+        codeBlock('sql', `<span class="k">SELECT</span> u.kscode,
+       (<span class="k">SELECT</span> <span class="f">string_agg</span>(d.loginname, <span class="s">'、'</span> <span class="k">ORDER BY</span> d.loginname)
+          <span class="k">FROM</span> Tays_UserInfo_szks d
+         <span class="k">WHERE</span> d.kscode = u.kscode) <span class="k">AS</span> login_names
+  <span class="k">FROM</span> Tays_Dept u;`),
+        '<h2>方案对比</h2>',
+        '<table><tr><th>改法</th><th>是否改变语义</th><th>适用场景</th></tr>',
+        '<tr><td>LATERAL + LIMIT 1</td><td>否</td><td>默认取最新/主记录，推荐</td></tr>',
+        '<tr><td>MIN / MAX 聚合</td><td>是</td><td>值不重要，只要不报错</td></tr>',
+        '<tr><td>string_agg</td><td>是</td><td>报表需要展示全部人员</td></tr></table>',
+        '<hr>',
+        '<p><b>结论</b>：先用第二段 SQL 确认重复度，再按业务口径选改法。临时救火加 <code>LIMIT 1</code> 也能过，但 <code>ORDER BY</code> 必须写死，否则每次执行取到的人可能都不一样——问题只是被藏起来，过两周还会以「数据对不上」的形式回来。</p>'
+      ].join('')
+    },
+
+    '病种统计报表API改造': {
+      secs: 31,
+      q: '病种统计报表那个接口，最近加到 3 秒多了，前端说页面卡得打不开。能不能帮我看看怎么改，最好别动表结构。',
+      think: '3 秒多的报表接口，先想 N+1。病种是树形，如果在 Java 里递归查库，一层一次查询，几十个病种就是几十次往返。再叠加每次请求实时聚合全量、没有缓存。给方案时要注意用户说「别动表结构」，所以汇总表得单独建，不能改业务表。',
+      a: [
+        '<p>慢在三处：病种树逐层递归查库、每次请求实时聚合全量、没有结果缓存。按下面顺序改，改动量最小，也不用动现有业务表。</p>',
+        '<h2>一、接口层先加边界</h2>',
+        codeBlock('http', `GET /api/report/disease?start=2026-01-01&amp;end=2026-06-30&amp;page=1&amp;size=50`),
+        '<ul>',
+        '<li>时间跨度限制 366 天，超了直接返回 400，避免扫全表</li>',
+        '<li><code>size</code> 默认 20、上限 200，防止前端一次拉爆</li>',
+        '</ul>',
+        '<h2>二、数据层一次聚合，别在循环里查</h2>',
+        codeBlock('sql', `<span class="k">WITH RECURSIVE</span> tree <span class="k">AS</span> (
+  <span class="k">SELECT</span> code, code <span class="k">AS</span> root <span class="k">FROM</span> disease_dict <span class="k">WHERE</span> parent_code <span class="k">IS NULL</span>
+  <span class="k">UNION ALL</span>
+  <span class="k">SELECT</span> d.code, t.root <span class="k">FROM</span> disease_dict d <span class="k">JOIN</span> tree t <span class="k">ON</span> d.parent_code = t.code
+)
+<span class="k">SELECT</span> t.root <span class="k">AS</span> disease_code,
+       <span class="f">COUNT</span>(<span class="k">DISTINCT</span> r.patient_id) <span class="k">AS</span> patient_cnt
+  <span class="k">FROM</span> discharge_record r
+  <span class="k">JOIN</span> diagnosis dg <span class="k">ON</span> dg.record_id = r.id <span class="k">AND</span> dg.is_main = <span class="n">1</span>
+  <span class="k">JOIN</span> tree t <span class="k">ON</span> t.code = dg.disease_code
+ <span class="k">WHERE</span> r.discharge_date <span class="k">BETWEEN</span> :start <span class="k">AND</span> :end
+ <span class="k">GROUP BY</span> t.root;`),
+        '<p>关键是 <code>WITH RECURSIVE</code> 一次把子病种归到父级。不要在 Java 里 for 循环查库，那是 N+1 的根源，病种有 60 个就是 60 次往返。</p>',
+        '<h2>三、加一张汇总表</h2>',
+        codeBlock('sql', `<span class="k">CREATE TABLE</span> report_disease_daily (
+  stat_date     <span class="k">DATE</span>          <span class="k">NOT NULL</span>,
+  disease_code  <span class="k">VARCHAR</span>(<span class="n">20</span>)   <span class="k">NOT NULL</span>,
+  patient_cnt   <span class="k">INT</span>           <span class="k">NOT NULL DEFAULT</span> <span class="n">0</span>,
+  <span class="k">PRIMARY KEY</span> (stat_date, disease_code)
+);`),
+        '<blockquote>汇总表必须有 <code>(stat_date, disease_code)</code> 唯一键，跑批用 <code>INSERT ... ON CONFLICT DO UPDATE</code>。少这个唯一键，重跑一次数据就翻倍，这种坑在报表里特别常见。</blockquote>',
+        '<p>改完实测：命中汇总表 <b>120ms</b>，冷启动首次约 800ms，前端不用再等转圈了。</p>'
+      ].join('')
+    },
+
+    '超期随访29日算第一天': {
+      secs: 18,
+      q: '随访超期口径要确认一下：「29 日算第一天」到底是随访当天算第 1 天，还是满 29 天才算超期？信息科和护理部理解不一样，名单差了 30 多个人。',
+      think: '这是口径问题不是技术问题，但两种理解差一天，名单就会差一批。先把两种读法翻译成公式，让用户自己对，然后给对应 SQL，最后建议把口径做成配置，避免下次再吵。',
+      a: [
+        '<p>这句话有两种读法，差一天，名单就会差一批人：</p>',
+        '<ul>',
+        '<li><b>随访当天算第 1 天</b>：第 29 天 = <code>随访日期 + 28</code></li>',
+        '<li><b>满 29 天后算超期</b>：超期日 = <code>随访日期 + 29</code></li>',
+        '</ul>',
+        '<p>医院随访一般按第一种（自然日），对应写法：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> f.patient_id, f.visit_date,
+       <span class="f">CURRENT_DATE</span> - f.visit_date <span class="k">AS</span> days_passed
+  <span class="k">FROM</span> follow_up f
+ <span class="k">WHERE</span> f.status = <span class="s">'0'</span>
+   <span class="k">AND</span> <span class="f">CURRENT_DATE</span> - f.visit_date &gt;= <span class="n">28</span>;`),
+        '<p>跨月、跨年都按自然日推进，不要一半用 <code>+ 29 * interval \'1 day\'</code>、一半用日期相减，两种写法在月末会差一天。</p>',
+        '<h2>建议：把口径写进配置</h2>',
+        codeBlock('sql', `<span class="k">CREATE TABLE</span> rule_config (
+  rule_key   <span class="k">VARCHAR</span>(<span class="n">64</span>) <span class="k">PRIMARY KEY</span>,
+  rule_value <span class="k">INT</span> <span class="k">NOT NULL</span>,
+  remark     <span class="k">VARCHAR</span>(<span class="n">200</span>)
+);
+<span class="k">INSERT INTO</span> rule_config <span class="k">VALUES</span> (<span class="s">'follow_up.overdue_days'</span>, <span class="n">28</span>, <span class="s">'随访当天算第1天'</span>);`),
+        '<p>取数时 <code>JOIN</code> 配置表算出阈值，以后改口径只改一行数据，不用发版，也不会两个科室各写一套。</p>'
+      ].join('')
+    },
+
+    '出院诊断主键冲突分析': {
+      secs: 26,
+      q: '病案导入报主键冲突，primary key (record_id, diagnosis_seq)，但数据看着没重复。帮忙分析下是哪儿的问题。',
+      think: '看着没重复但报冲突，多半是 diagnosis_seq 的生成方式有问题：用 COUNT(*)+1 在并发下必然撞，或者上游重推时序号从 1 重新开始。先给找重复的 SQL，再看序号生成的代码。',
+      a: [
+        '<p>「看着没重复」通常是因为重复发生在<b>导入过程中</b>，不是源数据里。先确认三件事：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> record_id, diagnosis_seq, <span class="f">COUNT</span>(*) <span class="k">AS</span> cnt
+  <span class="k">FROM</span> discharge_diagnosis
+ <span class="k">GROUP BY</span> record_id, diagnosis_seq
+<span class="k">HAVING</span> <span class="f">COUNT</span>(*) &gt; <span class="n">1</span>;`),
+        '<ul>',
+        '<li><b>上游重推</b>：同一份病案推了两次，第二次序号又从 1 开始</li>',
+        '<li><b>序号生成</b>：用了 <code>SELECT COUNT(*)+1 FROM ...</code> 取下一个序号，两个线程同时算就撞</li>',
+        '<li><b>并行导入</b>：多线程按批次导入，没按 <code>record_id</code> 分组</li>',
+        '</ul>',
+        '<h2>改法</h2>',
+        '<p>序号交给数据库生成，别在应用层算：</p>',
+        codeBlock('sql', `<span class="k">INSERT INTO</span> discharge_diagnosis (record_id, diagnosis_seq, icd_code, diagnosis_name)
+<span class="k">SELECT</span> :record_id,
+       <span class="f">COALESCE</span>(<span class="f">MAX</span>(diagnosis_seq), <span class="n">0</span>) + <span class="f">row_number</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> src.seq),
+       src.icd_code, src.diagnosis_name
+  <span class="k">FROM</span> stage_diagnosis src
+ <span class="k">WHERE</span> src.record_id = :record_id
+ <span class="k">GROUP BY</span> src.seq, src.icd_code, src.diagnosis_name
+<span class="k">ON CONFLICT</span> (record_id, diagnosis_seq) <span class="k">DO NOTHING</span>;`),
+        '<p>建唯一索引之前，历史重复数据要先清洗，否则索引根本建不上：</p>',
+        codeBlock('sql', `<span class="k">DELETE FROM</span> discharge_diagnosis a
+ <span class="k">USING</span> discharge_diagnosis b
+ <span class="k">WHERE</span> a.ctid &gt; b.ctid
+   <span class="k">AND</span> a.record_id = b.record_id
+   <span class="k">AND</span> a.diagnosis_seq = b.diagnosis_seq;`),
+        '<blockquote>清洗前先备份，或者先把重复行导到 <code>discharge_diagnosis_bak</code> 再删。这一步删错了不好回滚。</blockquote>'
+      ].join('')
+    },
+
+    '三个查询加函数索引': {
+      secs: 21,
+      q: '这三个查询想加函数索引，但不确定能不能走得上：\n\n```sql\nupper(patient_name) = :name\nto_char(visit_date, \'yyyy-mm\') = :month\ncoalesce(dept_code, \'0000\') = :dept\n```\n\n麻烦看下哪些能加。',
+      think: '三个里只有第一个标准。第二个 to_char 的结果列参与等值，索引能建但一般不建议，改写成范围更好。第三个 coalesce 可以建，但更该在表上给默认值。要说清楚「能建」和「该建」的区别。',
+      a: [
+        '<p>三个的答案不一样：<b>能建</b>和<b>该建</b>是两件事。</p>',
+        '<h2>1. upper(patient_name)：可以，但要想清楚</h2>',
+        codeBlock('sql', `<span class="k">CREATE INDEX</span> idx_patient_name_upper
+    <span class="k">ON</span> patient (<span class="f">upper</span>(patient_name));`),
+        '<p>前提是查询里的表达式和索引定义<b>完全一致</b>，包括空格和括号。写成 <code>upper( patient_name )</code> 就走不上。</p>',
+        '<h2>2. to_char(visit_date,\'yyyy-mm\')：不建议</h2>',
+        '<p>索引能建，但选择性很差——一个月的数据往往占整表的 5% 以上，走索引还不如全表扫。改成范围条件，直接命中普通索引：</p>',
+        codeBlock('sql', `<span class="k">-- 不要这样</span>
+<span class="k">WHERE</span> <span class="f">to_char</span>(visit_date, <span class="s">'yyyy-mm'</span>) = <span class="s">'2026-06'</span>
+
+<span class="k">-- 改成这样</span>
+<span class="k">WHERE</span> visit_date &gt;= <span class="s">DATE '2026-06-01'</span>
+  <span class="k">AND</span> visit_date &lt;  <span class="s">DATE '2026-07-01'</span>`),
+        '<h2>3. coalesce(dept_code,\'0000\')：能建，但更该改数据</h2>',
+        '<p>如果 <code>dept_code</code> 大量为空，说明数据本身有问题。加 <code>DEFAULT \'0000\'</code> 并回填，比建函数索引更彻底：</p>',
+        codeBlock('sql', `<span class="k">UPDATE</span> patient <span class="k">SET</span> dept_code = <span class="s">'0000'</span> <span class="k">WHERE</span> dept_code <span class="k">IS NULL</span>;
+<span class="k">ALTER TABLE</span> patient <span class="k">ALTER COLUMN</span> dept_code <span class="k">SET DEFAULT</span> <span class="s">'0000'</span>;
+<span class="k">ALTER TABLE</span> patient <span class="k">ALTER COLUMN</span> dept_code <span class="k">SET NOT NULL</span>;`),
+        '<p>另外注意：函数必须是 <code>IMMUTABLE</code> 才能建索引，<code>to_char</code> 对 timestamp 是 stable，严格说建了也不会被优化器用来做等值匹配。</p>'
+      ].join('')
+    },
+
+    '诊断手术病种合计查询': {
+      secs: 29,
+      q: '统计病种的出院人数和手术台次，两个数分开查都对，合到一个查询里就翻倍了。这是什么原因？',
+      think: '典型的一对多 JOIN 放大。诊断和手术都挂在病案上，两张一对多的表直接 JOIN，行数是笛卡尔积，SUM 自然翻倍。要先各自聚合再 JOIN，或者用标量子查询。',
+      a: [
+        '<p>典型的<b>一对多 JOIN 放大</b>。诊断和手术都挂在同一个病案上，两张一对多的表直接 JOIN，行数变成 <code>n × m</code>，SUM 自然翻倍。</p>',
+        codeBlock('sql', `<span class="k">-- 错误写法：行数被放大</span>
+<span class="k">SELECT</span> dg.disease_code,
+       <span class="f">COUNT</span>(<span class="k">DISTINCT</span> r.patient_id) <span class="k">AS</span> patient_cnt,
+       <span class="f">COUNT</span>(op.id) <span class="k">AS</span> op_cnt          <span class="k">-- 这里会翻倍</span>
+  <span class="k">FROM</span> discharge_record r
+  <span class="k">JOIN</span> diagnosis dg <span class="k">ON</span> dg.record_id = r.id
+  <span class="k">JOIN</span> operation  op <span class="k">ON</span> op.record_id = r.id
+ <span class="k">GROUP BY</span> dg.disease_code;`),
+        '<h2>正确写法：先各自聚合，再关联</h2>',
+        codeBlock('sql', `<span class="k">WITH</span> p <span class="k">AS</span> (
+  <span class="k">SELECT</span> dg.disease_code, <span class="f">COUNT</span>(<span class="k">DISTINCT</span> r.patient_id) <span class="k">AS</span> patient_cnt
+    <span class="k">FROM</span> discharge_record r
+    <span class="k">JOIN</span> diagnosis dg <span class="k">ON</span> dg.record_id = r.id <span class="k">AND</span> dg.is_main = <span class="n">1</span>
+   <span class="k">GROUP BY</span> dg.disease_code
+), o <span class="k">AS</span> (
+  <span class="k">SELECT</span> dg.disease_code, <span class="f">COUNT</span>(op.id) <span class="k">AS</span> op_cnt
+    <span class="k">FROM</span> discharge_record r
+    <span class="k">JOIN</span> diagnosis dg <span class="k">ON</span> dg.record_id = r.id <span class="k">AND</span> dg.is_main = <span class="n">1</span>
+    <span class="k">JOIN</span> operation  op <span class="k">ON</span> op.record_id = r.id
+   <span class="k">GROUP BY</span> dg.disease_code
+)
+<span class="k">SELECT</span> <span class="f">COALESCE</span>(p.disease_code, o.disease_code) <span class="k">AS</span> disease_code,
+       <span class="f">COALESCE</span>(p.patient_cnt, <span class="n">0</span>) <span class="k">AS</span> patient_cnt,
+       <span class="f">COALESCE</span>(o.op_cnt, <span class="n">0</span>)      <span class="k">AS</span> op_cnt
+  <span class="k">FROM</span> p <span class="k">FULL JOIN</span> o <span class="k">ON</span> o.disease_code = p.disease_code;`),
+        '<h2>两种口径的区别</h2>',
+        '<table><tr><th>口径</th><th>含义</th><th>结果</th></tr>',
+        '<tr><td>COUNT(DISTINCT patient_id)</td><td>该病种出院人数</td><td>同一人多次住院算 1</td></tr>',
+        '<tr><td>COUNT(op.id)</td><td>手术台次</td><td>一台手术算 1</td></tr></table>',
+        '<p>原则很简单：<b>先各自聚合，再 JOIN</b>。别在一个查询里 JOIN 两张一对多的表再聚合，行数一定不对。</p>'
+      ].join('')
+    },
+
+    '抗菌药物医嘱提取结果': {
+      secs: 17,
+      q: '抗菌药物专项那个提取，跑出来一条都没有，SQL 是照去年那版改的，去年能跑出来 3000 多条。',
+      think: '结果为空，先别怀疑 SQL 写法，按条件层、数据层、权限层三层往上排。去年能跑今年不行，最可能是字典表更新了或者数据挪了库。给分层的 count，让他自己定位到哪一层。',
+      a: [
+        '<p>先别怀疑 SQL 写法，按三层从下往上排，一次就能定位：</p>',
+        '<ol>',
+        '<li><b>条件层</b>：<code>drug_type</code> 编码表是否更新到最新版，去年到今年国家目录改过</li>',
+        '<li><b>数据层</b>：目标时间段内到底有没有医嘱记录</li>',
+        '<li><b>权限层</b>：视图上有没有行级权限把数据过滤掉了</li>',
+        '</ol>',
+        codeBlock('sql', `<span class="k">-- 1) 医嘱本身有没有</span>
+<span class="k">SELECT</span> <span class="f">COUNT</span>(*) <span class="k">FROM</span> orders <span class="k">WHERE</span> order_time <span class="k">BETWEEN</span> :start <span class="k">AND</span> :end;
+
+<span class="k">-- 2) 字典表能不能对上</span>
+<span class="k">SELECT</span> <span class="f">COUNT</span>(*) <span class="k">FROM</span> orders o
+ <span class="k">JOIN</span> drug_dict d <span class="k">ON</span> d.drug_code = o.drug_code
+ <span class="k">WHERE</span> d.is_antibiotic = <span class="n">1</span>;
+
+<span class="k">-- 3) 视图里还剩多少</span>
+<span class="k">SELECT</span> <span class="f">COUNT</span>(*) <span class="k">FROM</span> v_orders_antibiotic
+ <span class="k">WHERE</span> order_time <span class="k">BETWEEN</span> :start <span class="k">AND</span> :end;`),
+        '<p>三段数字一比就知道问题在哪层：1 有 2 没有 → 字典表没映射；1、2 都有 3 没有 → 权限或视图定义的问题。</p>',
+        '<blockquote>去年能跑、今年不行，最常见的是字典表换了编码体系（比如从院内码换成国家码），<code>drug_code</code> 对不上了，这时候 SQL 一个字都不用改。</blockquote>'
+      ].join('')
+    },
+
+    '化疗证据提取为空': {
+      secs: 24,
+      q: '化疗证据那个规则，取出来全是空，但病历里明明写了化疗。规则是「医嘱 + 诊断 + 病理」三路取交集，是不是交集取错了？',
+      think: '三路交集，任何一路为空整体就空。先把三路分别 count，再两两 count，就能看出是哪一路拖了后腿。不要一上来就怀疑交集逻辑。',
+      a: [
+        '<p>三路取交集，任何一路为空整体就为空。先分别 count，再看两两交集：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span>
+  (<span class="k">SELECT</span> <span class="f">COUNT</span>(<span class="k">DISTINCT</span> patient_id) <span class="k">FROM</span> v_chemo_order)     <span class="k">AS</span> by_order,
+  (<span class="k">SELECT</span> <span class="f">COUNT</span>(<span class="k">DISTINCT</span> patient_id) <span class="k">FROM</span> v_chemo_diagnosis) <span class="k">AS</span> by_diag,
+  (<span class="k">SELECT</span> <span class="f">COUNT</span>(<span class="k">DISTINCT</span> patient_id) <span class="k">FROM</span> v_chemo_pathology) <span class="k">AS</span> by_path;`),
+        '<ul>',
+        '<li>医嘱为 0 → 药品字典没做化疗标记，或给药途径没纳入</li>',
+        '<li>诊断为 0 → ICD 版本不一致，<code>C50</code> 和 <code>C50.9</code> 对不上</li>',
+        '<li>病理为 0 → 病理科还没回写，或者关联键用了住院号而病理用的是病理号</li>',
+        '</ul>',
+        '<p>定位到哪一路之后，再检查那一路的关联键。交集本身出错的概率很低，多数是某一路的<b>关联键口径不一致</b>——比如医嘱按 <code>visit_id</code>、病理按 <code>inpatient_no</code>，看着都是住院号，实际一个是就诊流水一个是住院次数。</p>',
+        '<h2>验证交集</h2>',
+        codeBlock('sql', `<span class="k">SELECT</span> <span class="f">COUNT</span>(*) <span class="k">FROM</span> v_chemo_order o
+ <span class="k">JOIN</span> v_chemo_diagnosis d <span class="k">ON</span> d.visit_id = o.visit_id
+ <span class="k">JOIN</span> v_chemo_pathology p <span class="k">ON</span> p.visit_id = o.visit_id;`),
+        '<p>如果这条是 0，而三路单独都不为 0，那就是关联键的问题，不是规则的问题。</p>'
+      ].join('')
+    },
+
+    '姓名拼音全拼': {
+      secs: 15,
+      q: '想给患者表加一列姓名全拼，用于模糊检索。库是金仓，不确定有没有 pinyin 扩展，有没有稳妥的做法？',
+      think: '金仓不一定有 pinyin 扩展，别赌。稳妥做法是字典表 + 生成列，一次算好存起来，检索走索引。多音字要用姓氏表兜底。',
+      a: [
+        '<p>别赌扩展，金仓上多数装不了。稳妥做法是<b>字典表 + 生成列</b>，一次算好存下来，检索走索引。</p>',
+        '<h2>字典表</h2>',
+        codeBlock('sql', `<span class="k">CREATE TABLE</span> hanzi_pinyin (
+  hanzi   <span class="k">CHAR</span>(<span class="n">1</span>) <span class="k">PRIMARY KEY</span>,
+  pinyin  <span class="k">VARCHAR</span>(<span class="n">16</span>) <span class="k">NOT NULL</span>,
+  is_surname <span class="k">SMALLINT</span> <span class="k">DEFAULT</span> <span class="n">0</span>   <span class="k">-- 姓氏读音标记</span>
+);`),
+        '<h2>生成列</h2>',
+        codeBlock('sql', `<span class="k">ALTER TABLE</span> patient
+  <span class="k">ADD COLUMN</span> name_pinyin <span class="k">VARCHAR</span>(<span class="n">64</span>)
+  <span class="k">GENERATED ALWAYS AS</span> (fn_pinyin(patient_name)) <span class="k">STORED</span>;
+
+<span class="k">CREATE INDEX</span> idx_patient_pinyin <span class="k">ON</span> patient (name_pinyin <span class="k">varchar_pattern_ops</span>);`),
+        '<blockquote>多音字是最大的坑：<code>曾</code>、<code>单</code>、<code>解</code>、<code>仇</code> 做姓氏时读音和常用读音不一样。建议第一字优先查 <code>is_surname = 1</code> 的读音，后面再按常用读音。</blockquote>',
+        '<p>检索时用前缀匹配，不要 <code>LIKE \'%xx%\'</code>，那走不了索引：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> patient_id, patient_name
+  <span class="k">FROM</span> patient
+ <span class="k">WHERE</span> name_pinyin <span class="k">LIKE</span> <span class="s">'zhangsan%'</span>;`),
+        '<p>如果一定要中间匹配，再加 <code>pg_trgm</code> 的 GIN 索引，或者退一步只在拼音首字母上做前缀。</p>'
+      ].join('')
+    },
+
+    '临时表结构已确认': {
+      secs: 12,
+      q: '临时表结构我确认过了，字段和类型都对。还有别的要注意的吗？怕上线之后出问题。',
+      think: '结构没问题，但临时表有两个常被忽略的坑：会话级生命周期在连接池下会串数据，并发同名会冲突。给 DDL 示例，再提醒 ANALYZE。',
+      a: [
+        '<p>结构没问题，但临时表有两个隐患，上线前建议先处理：</p>',
+        '<h2>一、生命周期</h2>',
+        '<p>默认是<b>会话级</b>。应用走连接池，连接不关，临时表就一直活着，下一次请求复用同一个连接时会看到上次的残留数据。加 <code>ON COMMIT DROP</code> 变成事务级：</p>',
+        codeBlock('sql', `<span class="k">CREATE TEMP TABLE</span> tmp_stat (
+  dept_code   <span class="k">VARCHAR</span>(<span class="n">20</span>),
+  patient_cnt <span class="k">INT</span>
+) <span class="k">ON COMMIT DROP</span>;`),
+        '<h2>二、并发同名</h2>',
+        '<p>同一会话内重复建会报错，多用户并发时也容易撞。后缀带上进程号：</p>',
+        codeBlock('sql', `<span class="k">EXECUTE</span> <span class="s">'CREATE TEMP TABLE tmp_stat_'</span> || <span class="f">pg_backend_pid</span>() || <span class="s">' (...)'</span>;`),
+        '<p>另外临时表不写 WAL，数据量大时统计信息是空的，执行计划容易选错。用完记得：</p>',
+        codeBlock('sql', `<span class="k">ANALYZE</span> tmp_stat;`),
+        '<p>如果是批处理里的中间结果，也可以考虑用 <code>UNLOGGED TABLE</code>：能建索引、有统计信息，崩溃后自动清空，比临时表更适合大数据量。</p>'
+      ].join('')
+    },
+
+    'Pallim procedure not found': {
+      secs: 19,
+      q: '调用存储过程报 Pallim procedure not found，但库里面确实有这个过程的。是不是权限问题？',
+      think: '「找不到」有三种原因：大小写、search_path、权限。PG 里没 EXECUTE 权限报的也是 not found，所以权限确实是一个可能。给按顺序排查的 SQL。',
+      a: [
+        '<p>有可能，但先按顺序排三个原因，一般第一条就中了：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> n.nspname <span class="k">AS</span> schema_name,
+       p.proname,
+       <span class="f">pg_get_function_identity_arguments</span>(p.oid) <span class="k">AS</span> args
+  <span class="k">FROM</span> pg_proc p
+  <span class="k">JOIN</span> pg_namespace n <span class="k">ON</span> n.oid = p.pronamespace
+ <span class="k">WHERE</span> p.proname <span class="k">ILIKE</span> <span class="s">'%pallim%'</span>;`),
+        '<ol>',
+        '<li><b>大小写</b>：建的时候如果写成 <code>"Pallim"</code>（带双引号），名字就是区分大小写的；不加引号调用会被折叠成小写 <code>pallim</code>，自然找不到。这是最常见的一条。</li>',
+        '<li><b>search_path</b>：过程在别的 schema 下，当前会话搜不到。显式带上 schema 调用。</li>',
+        '<li><b>权限</b>：没有 <code>EXECUTE</code> 权限时，PG 报的就是 <code>not found</code>，不会提示「无权限」——这点容易误导。</li>',
+        '</ol>',
+        codeBlock('sql', `<span class="k">GRANT EXECUTE ON FUNCTION</span> public."Pallim"(<span class="k">varchar</span>) <span class="k">TO</span> app_user;
+
+<span class="k">-- 或者确认当前 search_path</span>
+<span class="k">SHOW</span> search_path;`),
+        '<p>如果上面三条都排除了，再看是不是在另一个库（database）里——跨库是看不到的，这种时候报错信息一模一样。</p>'
+      ].join('')
+    },
+
+    '无输血记录输出空数组': {
+      secs: 14,
+      q: '接口返回输血记录，没有记录的时候前端拿到的是 null，导致页面报错。想让后端统一返回空数组 []，SQL 怎么写？',
+      think: '两个点：LEFT JOIN 没匹配时 json_agg 会产出 [null]，要加 FILTER；聚合整体为 NULL 时要 COALESCE 成 []。给一段能直接用的 SQL。',
+      a: [
+        '<p>两个地方都要处理，少一个都不行：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> r.patient_id,
+       <span class="f">COALESCE</span>(
+         <span class="f">json_agg</span>(
+           <span class="f">json_build_object</span>(<span class="s">'date'</span>, b.trans_date, <span class="s">'ml'</span>, b.amount)
+           <span class="k">ORDER BY</span> b.trans_date
+         ) <span class="k">FILTER</span> (<span class="k">WHERE</span> b.id <span class="k">IS NOT NULL</span>),
+         <span class="s">'[]'</span>::json
+       ) <span class="k">AS</span> transfusions
+  <span class="k">FROM</span> patient r
+  <span class="k">LEFT JOIN</span> blood_transfusion b <span class="k">ON</span> b.patient_id = r.patient_id
+ <span class="k">GROUP BY</span> r.patient_id;`),
+        '<ul>',
+        '<li>不加 <code>FILTER (WHERE b.id IS NOT NULL)</code>：LEFT JOIN 没匹配时会产生一行全 NULL 的记录，聚合结果是 <code>[null]</code>，前端一样崩</li>',
+        '<li>不加 <code>COALESCE(..., \'[]\')</code>：聚合结果整体为 NULL 时返回 <code>null</code>，不是空数组</li>',
+        '</ul>',
+        '<p>如果用的是 MySQL，对应写法是 <code>COALESCE(JSON_ARRAYAGG(...), JSON_ARRAY())</code>，同样要注意 LEFT JOIN 产生的 NULL 元素，需要在子查询里先过滤掉。</p>'
+      ].join('')
+    },
+    '重跑月数据清理方案': {
+      secs: 27,
+      q: '某个月的报表数据算错了，要重跑。现在表里已经有这个月的数据，直接删了重跑怕影响别人查询，有没有稳妥点的做法？',
+      think: '重跑的核心是幂等 + 不影响在线查询。直接 DELETE 再跑，中间那段时间别人查到的是空。用临时表算好、事务内整体替换，或者按分区删。还要提醒先备份、跑完 ANALYZE。',
+      a: [
+        '<p>别直接 <code>DELETE</code> 完再跑，中间那几分钟别人查到的就是空的。推荐<b>影子表 + 事务内替换</b>：</p>',
+        codeBlock('sql', `<span class="k">CREATE TEMP TABLE</span> tmp_month <span class="k">AS</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> report_disease_daily <span class="k">WHERE</span> <span class="n">1</span> = <span class="n">0</span>;
+
+<span class="k">INSERT INTO</span> tmp_month <span class="k">SELECT</span> ...;   <span class="k">-- 重新算这个月</span>
+
+<span class="k">BEGIN</span>;
+<span class="k">DELETE FROM</span> report_disease_daily <span class="k">WHERE</span> stat_date <span class="k">BETWEEN</span> :start <span class="k">AND</span> :end;
+<span class="k">INSERT INTO</span> report_disease_daily <span class="k">SELECT</span> * <span class="k">FROM</span> tmp_month;
+<span class="k">COMMIT</span>;`),
+        '<h2>四个要点</h2>',
+        '<ul>',
+        '<li><b>先备份</b>：<code>CREATE TABLE bak_202611 AS SELECT * FROM ... WHERE stat_date BETWEEN ...</code>，删错了还能捞回来</li>',
+        '<li><b>单事务</b>：删除和插入必须在同一个事务里，中间不要 COMMIT</li>',
+        '<li><b>跑完 ANALYZE</b>：大批量增删之后统计信息会过期，执行计划容易选错</li>',
+        '<li><b>记批次号</b>：加一列 <code>batch_no</code>，出问题能定位是哪次跑的</li>',
+        '</ul>',
+        '<blockquote>如果这张表是按月分区的，直接 <code>TRUNCATE</code> 对应分区更快，而且 PG 里 TRUNCATE 在事务内也能回滚，比 DELETE 干净得多。</blockquote>'
+      ].join('')
+    },
+
+    '病案查询去重改法': {
+      secs: 22,
+      q: '病案列表查出来有重复行，同一个人同一次住院出现两三次。去重之后分页的总数又对不上，这个怎么改比较好？',
+      think: '重复行基本是 JOIN 了诊断或手术这类一对多的表。DISTINCT 能压掉重复，但总数一般是另算一条 COUNT，两边口径不一致就对不上。正解是 EXISTS 或者先把一对多聚合成一行。',
+      a: [
+        '<p>重复行基本可以确定是 JOIN 了一对多的表（诊断、手术、费用明细）。<code>DISTINCT</code> 能压掉重复，但分页的总数通常是另算一条 <code>COUNT(*)</code>，两边口径不一致，页码就会错乱。</p>',
+        '<h2>推荐：用 EXISTS 过滤</h2>',
+        codeBlock('sql', `<span class="k">SELECT</span> r.id, r.patient_id, r.admit_date
+  <span class="k">FROM</span> discharge_record r
+ <span class="k">WHERE</span> r.admit_date <span class="k">BETWEEN</span> :start <span class="k">AND</span> :end
+   <span class="k">AND EXISTS</span> (
+        <span class="k">SELECT</span> <span class="n">1</span> <span class="k">FROM</span> diagnosis d
+         <span class="k">WHERE</span> d.record_id = r.id <span class="k">AND</span> d.is_main = <span class="n">1</span>
+   )
+ <span class="k">ORDER BY</span> r.admit_date <span class="k">DESC</span>
+ <span class="k">LIMIT</span> :size <span class="k">OFFSET</span> :offset;`),
+        '<p>主表行数不变，一条病案就是一行，<code>COUNT(*)</code> 天然对得上，不用额外去重。</p>',
+        '<h2>确实要带出一对多的字段</h2>',
+        '<p>比如列表里要显示「主诊断 + 全部手术」，那就先把一对多聚合成一行再 JOIN：</p>',
+        codeBlock('sql', `<span class="k">WITH</span> op <span class="k">AS</span> (
+  <span class="k">SELECT</span> record_id, <span class="f">string_agg</span>(op_name, <span class="s">'、'</span>) <span class="k">AS</span> op_names
+    <span class="k">FROM</span> operation <span class="k">GROUP BY</span> record_id
+)
+<span class="k">SELECT</span> r.id, o.op_names
+  <span class="k">FROM</span> discharge_record r
+  <span class="k">LEFT JOIN</span> op o <span class="k">ON</span> o.record_id = r.id;`),
+        '<p><code>DISTINCT</code> 不是不能用，但它治的是症状不是病根——JOIN 放大一次，后面每加一个字段都得跟着改。</p>'
+      ].join('')
+    },
+
+    '修复scope函数类型错误': {
+      secs: 19,
+      q: '函数编译报错，说返回类型和声明不一致，但逻辑我看没问题：\n\n```sql\nCREATE FUNCTION fn_scope(p_id int) RETURNS varchar AS $$ ... $$\n```',
+      think: 'PG 的返回值是严格按声明校验的。RETURNS varchar 不带长度，函数体里 return 的是 text 或者 record 就会报。也可能是 RETURNS TABLE 和 RETURN QUERY 列数对不上。',
+      a: [
+        '<p>PG 的函数返回值是<b>严格按声明校验</b>的，不会帮你做隐式转换。常见的三种：</p>',
+        '<ol>',
+        '<li>声明 <code>RETURNS varchar</code>，函数体里 <code>RETURN</code> 的是 <code>text</code> 或者拼接表达式的结果</li>',
+        '<li><code>RETURNS TABLE(a int, b text)</code>，但 <code>RETURN QUERY</code> 的列数或顺序对不上</li>',
+        '<li>同时写了 <code>OUT</code> 参数和 <code>RETURNS</code>，两者冲突</li>',
+        '</ol>',
+        codeBlock('sql', `<span class="k">-- 报错的写法</span>
+<span class="k">CREATE FUNCTION</span> fn_scope(p_id <span class="k">int</span>) <span class="k">RETURNS varchar AS</span> $$
+<span class="k">BEGIN</span>
+  <span class="k">RETURN</span> p_id || <span class="s">'-'</span> || <span class="f">now</span>();   <span class="k">-- 这里是 text</span>
+<span class="k">END</span>;
+$$ <span class="k">LANGUAGE</span> plpgsql;
+
+<span class="k">-- 改成这样</span>
+<span class="k">CREATE FUNCTION</span> fn_scope(p_id <span class="k">int</span>) <span class="k">RETURNS text AS</span> $$
+<span class="k">BEGIN</span>
+  <span class="k">RETURN</span> p_id || <span class="s">'-'</span> || <span class="f">now</span>();
+<span class="k">END</span>;
+$$ <span class="k">LANGUAGE</span> plpgsql;`),
+        '<p>不确定声明成什么样，直接查库比对着 SQL 猜快：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> p.proname, <span class="f">pg_get_function_result</span>(p.oid) <span class="k">AS</span> ret
+  <span class="k">FROM</span> pg_proc p
+ <span class="k">WHERE</span> p.proname = <span class="s">'fn_scope'</span>;`),
+        '<p>改返回类型要用 <code>CREATE OR REPLACE</code> 或者先 <code>DROP</code>——如果返回类型变了，<code>OR REPLACE</code> 会直接报错，必须先删。</p>'
+      ].join('')
+    },
+
+    'PostgreSQL 22003 error fix': {
+      secs: 16,
+      q: '导入的时候报 22003，numeric field overflow，字段是 numeric(10,2)，数据源里有些值特别大。',
+      think: '22003 是 numeric_value_out_of_range。numeric(10,2) 最大 99999999.99，超了直接报，不截断。要么加宽字段，要么导入前先筛。还要看是不是计算过程中 sum 之后再 cast 溢出的。',
+      a: [
+        '<p><b>22003</b> 是 <code>numeric_value_out_of_range</code>。<code>numeric(10,2)</code> 能存的最大值是 <code>99999999.99</code>，超了直接报错，不会像 MySQL 那样截断或归零。</p>',
+        '<h2>先把超限的行找出来</h2>',
+        codeBlock('sql', `<span class="k">SELECT</span> id, amount
+  <span class="k">FROM</span> stage_fee
+ <span class="k">WHERE</span> <span class="f">abs</span>(amount) &gt;= <span class="n">1e8</span>
+ <span class="k">ORDER BY</span> <span class="f">abs</span>(amount) <span class="k">DESC</span>
+ <span class="k">LIMIT</span> <span class="n">50</span>;`),
+        '<h2>两种处理</h2>',
+        '<ul>',
+        '<li><b>数据确实这么大</b>：加宽字段，<code>ALTER TABLE ... ALTER COLUMN amount TYPE numeric(14,2)</code></li>',
+        '<li><b>是脏数据</b>：导入时就过滤掉，别让它进正式表，否则后面统计全是错的</li>',
+        '</ul>',
+        '<p>还有一种隐蔽的情况：单个值没超，但 <code>SUM</code> 之后超了再 <code>CAST</code> 回去。这时候要先把中间结果转成不限精度的 <code>numeric</code>，最后再 cast：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> dept_code, <span class="f">SUM</span>(amount)::numeric <span class="k">AS</span> total
+  <span class="k">FROM</span> fee_detail
+ <span class="k">GROUP BY</span> dept_code;`),
+        '<p><code>::numeric</code> 不带精度就不会溢出，最后落表的时候再决定要不要 cast 成 <code>numeric(14,2)</code>。</p>'
+      ].join('')
+    },
+
+    '手术相关文书清单': {
+      secs: 21,
+      q: '统计手术相关文书，现在只算了手术记录、术前小结、麻醉记录，领导说漏了。到底哪些要算进去？口径得统一一下。',
+      think: '这是口径问题不是技术问题。按术前/术中/术后三段枚举，容易漏的是术前讨论、手术安全核查、术后首次病程。给一张对照表，再强调按 doc_type 编码匹配不要按名称模糊匹配。',
+      a: [
+        '<p>按「术前 / 术中 / 术后」三段枚举，最容易漏的是术前讨论和术后首次病程：</p>',
+        '<table>',
+        '<tr><th>阶段</th><th>文书</th><th>是否必填</th></tr>',
+        '<tr><td>术前</td><td>术前小结、术前讨论、手术知情同意书</td><td>是</td></tr>',
+        '<tr><td>术中</td><td>手术记录、麻醉记录、手术安全核查表</td><td>是</td></tr>',
+        '<tr><td>术后</td><td>术后首次病程记录、术后医嘱</td><td>是</td></tr>',
+        '<tr><td>术后</td><td>麻醉访视记录、手术护理记录</td><td>按院区要求</td></tr>',
+        '</table>',
+        '<h2>统计口径</h2>',
+        '<ul>',
+        '<li>按 <code>doc_type</code> 编码匹配，<b>不要按文书名称模糊匹配</b>——各科室命名不统一，「术前小结」有人写成「术前小结记录」</li>',
+        '<li>一次住院多台手术时，文书按手术次数算，不要按住院次数去重</li>',
+        '<li>取消的手术（<code>status = \'2\'</code>）不计入分母</li>',
+        '</ul>',
+        '<p>口径定下来之后写进统计说明，下次再有人问「为什么我们科只有 92%」就有据可查。</p>'
+      ].join('')
+    },
+
+    '时间戳空字符串报错修复': {
+      secs: 15,
+      q: '批量导入报 invalid input syntax for type timestamp: ""，源数据里有些时间字段是空字符串，不是 NULL。这个怎么处理最省事？',
+      think: '空字符串不是 NULL，PG 不会自动转。用 NULLIF(trim(x),\'\')::timestamp 一行搞定，或者导入时统一清洗一次。还要提醒注意 0000-00-00 这类脏值。',
+      a: [
+        '<p>空字符串不是 <code>NULL</code>，PG 不会帮你转，所以直接报 <code>invalid input syntax</code>。一行就能解决：</p>',
+        codeBlock('sql', `<span class="k">SELECT</span> <span class="f">NULLIF</span>(<span class="f">trim</span>(visit_time), <span class="s">''</span>)::timestamp <span class="k">AS</span> visit_time
+  <span class="k">FROM</span> stage_visit;`),
+        '<p><code>NULLIF</code> 把空串变成 <code>NULL</code>，<code>NULL</code> 转 timestamp 是合法的，不会报错。</p>',
+        '<h2>整表清洗一次更彻底</h2>',
+        codeBlock('sql', `<span class="k">UPDATE</span> stage_visit
+   <span class="k">SET</span> visit_time = <span class="k">NULL</span>
+ <span class="k">WHERE</span> <span class="f">trim</span>(visit_time) = <span class="s">''</span>;`),
+        '<p>如果这一列还是 <code>varchar</code>，清洗完再改类型，顺序别反：</p>',
+        codeBlock('sql', `<span class="k">ALTER TABLE</span> stage_visit
+  <span class="k">ALTER COLUMN</span> visit_time <span class="k">TYPE</span> timestamp
+  <span class="k">USING</span> <span class="f">NULLIF</span>(<span class="f">trim</span>(visit_time), <span class="s">''</span>)::timestamp;`),
+        '<blockquote>顺手查一下有没有 <code>\'0000-00-00\'</code>、<code>\'0000-00-00 00:00:00\'</code> 这种从 MySQL 导过来的脏值，它们同样过不了 timestamp 校验。</blockquote>'
+      ].join('')
+    },
+
+    '指标逻辑替换咨询': {
+      secs: 25,
+      q: '院感指标的计算逻辑要换，老口径按出院日期算，新口径按感染日期算。直接改 SQL 影响面太大，有没有平滑过渡的办法？',
+      think: '口径切换最怕新旧混着算。建议双跑一段时间，两个结果并存，报表加版本开关。差异最大的应该是跨月入院的病人，这部分要单独拉出来跟临床对。',
+      a: [
+        '<p>别直接改老 SQL，先<b>双跑</b>：新口径单独算一份存起来，两张报表并行出一段时间，比对差异再切。</p>',
+        '<h2>加一个版本字段</h2>',
+        codeBlock('sql', `<span class="k">ALTER TABLE</span> infection_stat
+  <span class="k">ADD COLUMN</span> stat_version <span class="k">smallint</span> <span class="k">DEFAULT</span> <span class="n">1</span>;   <span class="k">-- 1=老口径 2=新口径</span>`),
+        '<p>报表查询按 <code>stat_version</code> 过滤，前端加个开关，谁想用哪个口径自己切。</p>',
+        '<h2>差异比对</h2>',
+        codeBlock('sql', `<span class="k">SELECT</span> <span class="f">COALESCE</span>(a.dept_code, b.dept_code) <span class="k">AS</span> dept_code,
+       a.cnt <span class="k">AS</span> old_cnt,
+       b.cnt <span class="k">AS</span> new_cnt,
+       b.cnt - a.cnt <span class="k">AS</span> diff
+  <span class="k">FROM</span> ( <span class="k">SELECT</span> dept_code, <span class="f">COUNT</span>(*) cnt <span class="k">FROM</span> infection_stat <span class="k">WHERE</span> stat_version = <span class="n">1</span> <span class="k">GROUP BY</span> <span class="n">1</span> ) a
+  <span class="k">FULL JOIN</span> ( <span class="k">SELECT</span> dept_code, <span class="f">COUNT</span>(*) cnt <span class="k">FROM</span> infection_stat <span class="k">WHERE</span> stat_version = <span class="n">2</span> <span class="k">GROUP BY</span> <span class="n">1</span> ) b
+    <span class="k">ON</span> b.dept_code = a.dept_code
+ <span class="k">WHERE</span> a.cnt <span class="k">IS DISTINCT FROM</span> b.cnt;`),
+        '<p>差异最大的几乎一定是<b>跨月入院的病人</b>——按出院日期算落在下个月，按感染日期算落在上个月。这部分单独拉出来跟临床对一次，比全量核对省力得多。</p>',
+        '<p>双跑建议至少覆盖一个完整季度，把季末、年末这两个节点都走一遍再切。</p>'
+      ].join('')
+    },
+
+    'SQL语法错误Where修复': {
+      secs: 17,
+      q: '这条 SQL 报语法错误，说 near WHERE，但我看着没写错：\n\n```sql\nSELECT * FROM patient p\nWHERE p.status = 1 AND p.dept = :dept OR p.dept = :dept2\n```',
+      think: '报 near WHERE 通常不是 WHERE 本身，是它前面那段没闭合——括号、引号、或者上一行多了个逗号。这条还能看出 and/or 优先级的问题，顺便提醒一下。',
+      a: [
+        '<p>报 <code>near WHERE</code> 基本都不是 WHERE 本身写错，而是它<b>前面</b>那段没闭合。按这个顺序看：</p>',
+        '<ol>',
+        '<li>上一行末尾是不是多了个逗号</li>',
+        '<li>括号是不是少了一个（子查询、<code>IN (...)</code> 最常见）</li>',
+        '<li>字符串引号有没有配对，尤其是拼 SQL 的时候</li>',
+        '</ol>',
+        '<h2>顺便说说这条的优先级问题</h2>',
+        '<p><code>AND</code> 的优先级比 <code>OR</code> 高，所以下面这条实际含义是：</p>',
+        codeBlock('sql', `<span class="k">WHERE</span> p.status = <span class="n">1</span> <span class="k">AND</span> p.dept = :dept
+   <span class="k">OR</span> p.dept = :dept2`),
+        '<p>等于 <code>(status=1 AND dept=:dept) OR dept=:dept2</code>，第二个科室的<b>所有状态</b>都会被带出来，包括已作废的。大概率不是你想要的：</p>',
+        codeBlock('sql', `<span class="k">WHERE</span> p.status = <span class="n">1</span>
+  <span class="k">AND</span> (p.dept = :dept <span class="k">OR</span> p.dept = :dept2)`),
+        '<p>另一种写法更清楚，也更好加索引：</p>',
+        codeBlock('sql', `<span class="k">WHERE</span> p.status = <span class="n">1</span>
+  <span class="k">AND</span> p.dept <span class="k">IN</span> (:dept, :dept2)`),
+        '<p>把完整 SQL 贴全我再看，单看这一段猜不出来是哪里的括号没闭合。</p>'
+      ].join('')
+    }
+
+  };
+
+  // 用户提问里用 ``` 包住的部分按代码块渲染
+  function fmtAsk(text){
+    var parts = String(text).split('```');
+    var out = '';
+    for (var i = 0; i < parts.length; i++){
+      if (i % 2 === 1){
+        var body = parts[i].replace(/^[a-zA-Z]*\n/, '');
+        out += '<div class="ask-code"><pre>' + esc(body.replace(/\n$/, '')) + '</pre></div>';
+      } else {
+        out += esc(parts[i]);
+      }
+    }
+    return out;
+  }
+
+  function showCanned(title){
+    var c = CANNED[title] || CANNED[ALIAS[title]] || CANNED['存储过程21000错误解决'];
+    thread.innerHTML = '';
+    var el = document.createElement('section');
+    el.className = 'chapter';
+    el.innerHTML =
+      '<div class="ask-row"><div class="ask">' + fmtAsk(c.q) + '</div></div>' +
+      (c.think
+        ? '<div class="think">' + ICONS.chev + '已深度思考（用时 ' + (c.secs || 20) + ' 秒）</div>' +
+          '<div class="think-body"><p>' + c.think + '</p></div>'
+        : '') +
+      '<div class="ch-body">' + c.a + '</div>' +
+      '<div class="msg-foot"><span>本回答由 AI 生成，内容仅供参考，请仔细甄别。</span>' +
+      '<div class="foot-acts"><button data-act="copy">' + ICONS.copy + '</button>' +
+      '<button data-act="refresh">' + ICONS.refresh + '</button>' +
+      '<button data-act="like">' + ICONS.up + '</button>' +
+      '<button data-act="dislike">' + ICONS.down + '</button></div></div>';
+    thread.appendChild(el);
+    S.canned = true;
+    S.mode = 'read';
+    document.body.dataset.mode = 'read';
+    syncComposer('read');
+    document.title = title + ' - DeepSeek';
+    chatScroll.scrollTop = 0;
+    $('#progress').textContent = '';
+
+    // 侧栏也切成工作对话，避免露出一堆章节名
+    renderFakeGroups(title);
+    if (FAKE.indexOf(title) >= 0){          // 点的是「30天内」的会话，高亮留在原地
+      var items = listFake.querySelectorAll('.item');
+      for (var i = 0; i < items.length; i++){
+        if (items[i].title === title){ items[i].classList.add('active'); break; }
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 13. events
+   * ------------------------------------------------------------------ */
+  // chapter footer actions
+  thread.addEventListener('click', function(e){
+    var th = e.target.closest('.think');
+    if (th){ th.classList.toggle('open'); return; }
+    var cbtn = e.target.closest('[data-code]');
+    if (cbtn){
+      var pre = cbtn.closest('.code').querySelector('pre');
+      if (cbtn.dataset.code === 'copy'){
+        if (navigator.clipboard) navigator.clipboard.writeText(pre.innerText);
+        toast('已复制');
+      } else {
+        toast('下载功能暂不可用');
+      }
+      return;
+    }
+    var btn = e.target.closest('.foot-acts button');
+    if (!btn) return;
+    var act = btn.dataset.act;
+    var sec = btn.closest('.chapter');
+    if (act === 'copy'){
+      var txt = sec ? sec.innerText.replace(/\n?本回答由 AI 生成[\s\S]*$/, '').trim() : '';
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ toast('已复制'); });
+      else toast('已复制');
+    } else if (act === 'like' || act === 'dislike'){
+      btn.classList.toggle('on');
+      toast(act === 'like' ? '感谢反馈' : '感谢反馈，我们会继续改进');
+    } else if (act === 'refresh'){
+      toast('已重新生成');
+    } else if (act === 'speak'){
+      toast('朗读功能暂不可用');
+    }
+  });
+
+  // new chat -> back to the (fake) empty conversation
+  $('#newChat').addEventListener('click', function(){
+    if (S.mode === 'read') setMode('home');
+    inputBlur();
+  });
+  $('#attachBtn').addEventListener('click', function(){ $('#fileInput').click(); });
+  $('#fileInput').addEventListener('change', function(e){
+    if (e.target.files && e.target.files[0]) importBook(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // drag & drop
+  ['dragenter','dragover'].forEach(function(ev){
+    window.addEventListener(ev, function(e){ e.preventDefault(); });
+  });
+  window.addEventListener('drop', function(e){
+    e.preventDefault();
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) importBook(f);
+  });
+
+  // bookshelf
+  $('#shelfImport').addEventListener('click', function(){ $('#fileInput').click(); });
+  $('#shelfClose').addEventListener('click', closeShelf);
+  shelfEl.addEventListener('click', function(e){ if (e.target === shelfEl) closeShelf(); });
+
+  // table of contents
+  $('#tocBtn').addEventListener('click', openToc);
+  $('#tocClose').addEventListener('click', closeToc);
+  tocEl.addEventListener('click', function(e){ if (e.target === tocEl) closeToc(); });
+
+  // sidebar collapse
+  $('#collapseBtn').addEventListener('click', function(){ document.body.classList.add('sb-collapsed'); });
+  $('#expandSb').addEventListener('click', function(){ document.body.classList.remove('sb-collapsed'); });
+
+  // clicking outside the composer drops focus, so paging keys work
+  document.addEventListener('mousedown', function(e){
+    if (!e.target.closest('.composer')) inputBlur();
+  });
+
+  // settings panel
+  var userMenu = $('#userMenu');
+  $('#userMore').addEventListener('click', function(e){
+    e.stopPropagation();
+    userMenu.classList.toggle('show');
+  });
+  userMenu.addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if (!b) return;
+    userMenu.classList.remove('show');
+    var m = b.dataset.m;
+    if (m === 'shelf') openShelf();
+    if (m === 'settings') $('#settings').classList.toggle('show');
+    if (m === 'help') $('#help').classList.add('show');
+    if (m === 'open') $('#fileInput').click();
+    if (m === 'collapse') document.body.classList.add('sb-collapsed');
+  });
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('#settings') && !e.target.closest('#userMenu') && !e.target.closest('#userMore')){
+      $('#settings').classList.remove('show');
+    }
+    if (!e.target.closest('#userMenu') && !e.target.closest('#userMore')) userMenu.classList.remove('show');
+  });
+  $('#settings').addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if (b){
+      if (b.dataset.fs){
+        S.fontSize = clamp(S.fontSize + (+b.dataset.fs), 13, 24);
+      } else if (b.dataset.lh){
+        S.lineHeight = clamp(+(S.lineHeight + (+b.dataset.lh) * 0.05).toFixed(2), 1.5, 2.6);
+      } else if (b.dataset.pg){
+        S.pgap = clamp(S.pgap + (+b.dataset.pg) * 2, 0, 32);
+      }
+      applyType(); saveSettings(); saveProgress(true);
+      setTimeout(refreshOffsets, 30);
+      return;
+    }
+    var sw = e.target.closest('.switch');
+    if (sw){
+      if (sw.id === 'swIndent') S.indent = !S.indent;
+      if (sw.id === 'swHud') S.hud = !S.hud;
+      applyType(); saveSettings(); saveProgress(true);
+      setTimeout(refreshOffsets, 30);
+    }
+  });
+
+  // composer
+  var input = $('#input'), sendBtn = $('#sendBtn');
+  input.addEventListener('input', function(){
+    sendBtn.classList.toggle('ready', input.textContent.trim().length > 0);
+  });
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      if (!input.textContent.trim()) return;
+      input.textContent = '';
+      sendBtn.classList.remove('ready');
+      input.blur();
+      toast('网络连接超时，请稍后重试');
+    }
+  });
+  sendBtn.addEventListener('click', function(){
+    if (!input.textContent.trim()) return;
+    input.textContent = '';
+    sendBtn.classList.remove('ready');
+    toast('网络连接超时，请稍后重试');
+  });
+  $('#pillThink').addEventListener('click', function(){ this.classList.toggle('on'); });
+  $('#pillSearch').addEventListener('click', function(){ this.classList.toggle('on'); });
+
+  // to bottom
+  $('#toBottom').addEventListener('click', function(){
+    if (chatScroll.scrollTop < 120){
+      chatScroll.scrollBy({ top: chatScroll.clientHeight * 0.86, behavior: 'smooth' });
+    } else {
+      chatScroll.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  // keyboard
+  document.addEventListener('keydown', function(e){
+    var hidden = $('#hiddenScreen');
+
+    // emergency hide
+    if (hidden.classList.contains('show')){
+      e.preventDefault();
+      hidden.classList.remove('show');
+      document.title = 'DeepSeek';
+      return;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'X' || e.key === 'x')){
+      e.preventDefault();
+      hidden.classList.add('show');
+      document.title = '会议纪要.docx - Word';
+      return;
+    }
+
+    if (e.key === 'Escape'){
+      e.preventDefault();
+      inputBlur();
+      if ($('#help').classList.contains('show')){ $('#help').classList.remove('show'); return; }
+      if (tocEl.classList.contains('show')){ closeToc(); return; }
+      if (shelfEl.classList.contains('show')){ closeShelf(); return; }
+      if ($('#settings').classList.contains('show')){ $('#settings').classList.remove('show'); return; }
+      userMenu.classList.remove('show');
+      if (!S.total) return;
+      if (S.mode === 'read'){ setMode('home'); }
+      else { setMode('read'); }
+      return;
+    }
+
+    var typing = document.activeElement && (
+      document.activeElement.isContentEditable ||
+      document.activeElement.tagName === 'INPUT' ||
+      document.activeElement.tagName === 'TEXTAREA'
+    );
+    if (typing && !e.ctrlKey && !e.metaKey) return;
+
+    // ctrl combos
+    if (e.ctrlKey || e.metaKey){
+      if (e.key === 'b'){ e.preventDefault(); document.body.classList.toggle('sb-collapsed'); return; }
+      if (e.key === ','){ e.preventDefault(); $('#settings').classList.toggle('show'); return; }
+      if (e.key === 'o'){ e.preventDefault(); $('#fileInput').click(); return; }
+      if (e.key === '=' || e.key === '+'){
+        e.preventDefault(); S.fontSize = clamp(S.fontSize + 1, 13, 24); applyType(); saveSettings(); saveProgress(true); return;
+      }
+      if (e.key === '-'){
+        e.preventDefault(); S.fontSize = clamp(S.fontSize - 1, 13, 24); applyType(); saveSettings(); saveProgress(true); return;
+      }
+      return;
+    }
+
+    switch (e.key){
+      case '?':
+        $('#help').classList.toggle('show'); e.preventDefault(); break;
+      case ' ':
+      case 'PageDown':
+        e.preventDefault(); pageDown(); break;
+      case 'ArrowRight':
+        e.preventDefault(); pageDown(); break;
+      case 'ArrowLeft':
+        e.preventDefault(); pageUp(); break;
+      case 'PageUp':
+        e.preventDefault(); pageUp(); break;
+      case ']':
+        e.preventDefault(); nextChapter(); break;
+      case '[':
+        e.preventDefault(); prevChapter(); break;
+      case 'b': case 'B':
+        if (shelfEl.classList.contains('show')) closeShelf(); else openShelf();
+        break;
+      case 'c': case 'C':
+        if (tocEl.classList.contains('show')) closeToc(); else openToc();
+        break;
+      case 'j': case 'J':
+        pageDown(); break;
+      case 'k': case 'K':
+        pageUp(); break;
+    }
+  });
+
+  $('#help').addEventListener('click', function(e){
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  // resize -> recompute offsets
+  var rzTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(rzTimer);
+    rzTimer = setTimeout(refreshOffsets, 120);
+  });
+
+  // flush reading position when the tab is hidden / closed
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) saveProgress(true);
+  });
+  window.addEventListener('pagehide', function(){ saveProgress(true); });
+
+  /* ------------------------------------------------------------------ *
+   * 14. boot
+   * ------------------------------------------------------------------ */
+  function firstRunBook(){
+    var oldBook = null, oldState = null;
+    try {
+      oldBook = JSON.parse(localStorage.getItem('dsr:book') || 'null');
+      oldState = JSON.parse(localStorage.getItem('dsr:state') || 'null');
+    } catch (e){}
+    var text = (oldBook && oldBook.text) || DEMO_TEXT;
+    var name = (oldBook && oldBook.name) || DEMO_TITLE;
+    var chapters = parseBook(text);
+    var rec = {
+      id: newId(), name: name, chapterCount: chapters.length, size: text.length,
+      addedAt: Date.now(), lastReadAt: Date.now(),
+      idx: (oldState && oldState.name === name) ? (oldState.idx || 0) : 0,
+      scroll: (oldState && oldState.name === name) ? (oldState.scroll || 0) : 0,
+      percent: 0
+    };
+    try { localStorage.removeItem('dsr:book'); } catch (e){}
+    var isDemo = !oldBook;
+    return dbPut(ST_TEXT, { id: rec.id, text: text })
+      .then(function(){ return dbPut(ST_BOOKS, rec); })
+      .then(function(){
+        S.books = [rec];
+        openBookRecord(rec, text);
+        if (isDemo){
+          setTimeout(function(){
+            if (S.mode === 'read') toast('示例文本 · 把 .txt 拖进窗口，或按 B 打开书架导入');
+          }, 800);
+        }
+      });
+  }
+
+  // 换域名/换协议等于换 origin，浏览器里的 IndexedDB 不会跟过来。
+  // 旧地址的 /__migrate 会把书架打包 POST 到 /__dump，这里在本地为空时把它取回来。
+  function restoreFromDump(){
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return Promise.resolve(false);
+    return fetch('/__dump', { cache: 'no-store' }).then(function(r){
+      if (!r.ok) return false;
+      return r.json();
+    }).then(function(data){
+      if (!data || !data.books || !data.books.length) return false;
+      var chain = Promise.resolve();
+      data.books.forEach(function(b){
+        chain = chain.then(function(){ return dbPut(ST_BOOKS, b); });
+      });
+      (data.texts || []).forEach(function(t){
+        chain = chain.then(function(){ return dbPut(ST_TEXT, t); });
+      });
+      return chain.then(function(){
+        try {
+          var ls = data.ls || {};
+          Object.keys(ls).forEach(function(k){ localStorage.setItem(k, ls[k]); });
+        } catch (e){}
+        return true;
+      });
+    }).catch(function(){ return false; });
+  }
+
+  function boot(){
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('dsr:type') || 'null'); } catch (e){}
+    if (saved){
+      S.fontSize = saved.fontSize || 16;
+      S.lineHeight = saved.lineHeight || 1.95;
+      S.pgap = typeof saved.pgap === 'number' ? saved.pgap : 13;
+      S.indent = !!saved.indent;
+      S.hud = saved.hud !== false;
+    }
+    applyType();
+
+    dbOpen().then(function(){
+      return dbAll(ST_BOOKS);
+    }).then(function(list){
+      S.books = (list || []).slice();
+      if (S.books.length) return null;
+      return restoreFromDump().then(function(ok){
+        if (!ok) return null;
+        S.migrated = true;
+        return dbAll(ST_BOOKS).then(function(l2){ S.books = (l2 || []).slice(); });
+      });
+    }).then(function(){
+      if (!S.books.length) return firstRunBook();
+      if (S.migrated){
+        setTimeout(function(){ toast('书架已从旧地址迁移过来'); }, 1000);
+      }
+      var lastId = null;
+      try { lastId = localStorage.getItem('dsr:lastBook'); } catch (e){}
+      var target = null;
+      for (var i = 0; i < S.books.length; i++){
+        if (S.books[i].id === lastId) target = S.books[i];
+      }
+      if (!target){
+        S.books.sort(function(a, b){ return (b.lastReadAt || 0) - (a.lastReadAt || 0); });
+        target = S.books[0];
+      }
+      return openBook(target.id);
+    }).then(function(){
+      renderShelf();
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
