@@ -31,6 +31,7 @@ import uuid
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
+from txt_tools import handle_txt_request
 
 APP_NAME = 'MoyuReader'
 DOMAIN = 'chat.deepseek6.com'
@@ -332,6 +333,8 @@ class Handler(BaseHTTPRequestHandler):
         self._file(PAGE, 'text/html; charset=utf-8')
 
     def do_POST(self):
+        if handle_txt_request(self, self._send):
+            return
         if not self.path.startswith('/__dump'):
             self.send_error(404, 'not found')
             return

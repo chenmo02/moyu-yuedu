@@ -30,6 +30,7 @@ import uuid
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
+from txt_tools import handle_txt_request
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.join(ROOT, 'index.html')
@@ -215,6 +216,8 @@ class Handler(BaseHTTPRequestHandler):
         self._send_file(PAGE, 'text/html; charset=utf-8')
 
     def do_POST(self):
+        if handle_txt_request(self, self._send_bytes):
+            return
         if not self.path.startswith('/__dump'):
             self.send_error(404, 'not found')
             return

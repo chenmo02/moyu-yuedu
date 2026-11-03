@@ -1,0 +1,2 @@
+Set-Location -LiteralPath "C:\Users\64860\Documents\代码\摸鱼阅读器\moyu-yuedu"
+python -m PyInstaller --noconfirm MoyuReader.spec
