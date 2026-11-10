@@ -32,6 +32,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from txt_tools import handle_txt_request
+from book_sources import handle_source_request
 
 APP_NAME = 'MoyuReader'
 DOMAIN = 'chat.deepseek6.com'
@@ -271,12 +272,13 @@ MIGRATE_PAGE = """<!DOCTYPE html><html><head><meta charset="utf-8">
           var books = await all(db, 'books');
           if (books.length){
             var texts = db.objectStoreNames.contains('texts') ? await all(db, 'texts') : [];
+            var sources = db.objectStoreNames.contains('sources') ? await all(db, 'sources') : [];
             var ls = {};
             for (var i = 0; i < localStorage.length; i++){
               var k = localStorage.key(i);
               if (k.indexOf('dsr:') === 0) ls[k] = localStorage.getItem(k);
             }
-            await fetch('/__dump', {method:'POST', body: JSON.stringify({books: books, texts: texts, ls: ls}),
+            await fetch('/__dump', {method:'POST', body: JSON.stringify({books: books, texts: texts, sources: sources, ls: ls}),
                                     headers:{'Content-Type':'application/json'}});
           }
         }
@@ -333,6 +335,8 @@ class Handler(BaseHTTPRequestHandler):
         self._file(PAGE, 'text/html; charset=utf-8')
 
     def do_POST(self):
+        if handle_source_request(self, self._send):
+            return
         if handle_txt_request(self, self._send):
             return
         if not self.path.startswith('/__dump'):

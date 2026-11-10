@@ -1,0 +1,4 @@
+beautifulsoup4>=4.12,<5
+lxml>=5,<7
+jsonpath-ng>=1.7,<2
+requests>=2.32,<3

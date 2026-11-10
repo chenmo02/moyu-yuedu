@@ -320,6 +320,38 @@
     padding:10px 20px 14px;font-size:11.5px;color:#b5b5b5;border-top:1px solid #f4f4f4;
   }
 
+  #sourceDialog{display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.25);align-items:center;justify-content:center;padding:16px}
+  #sourceDialog.show{display:flex}
+  .source-card{width:720px;max-width:100%;max-height:86vh;background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden}
+  .source-body{padding:0 20px 18px;overflow-y:auto;min-height:0}
+  .source-manager{border:0;padding:0;margin:0;min-width:0}
+  .source-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+  .source-tools .source-status{flex:1;min-width:130px}
+  .source-tools .source-clear{color:#c34747;background:#fff6f6;border-color:#f4dddd}
+  .source-row{display:flex;gap:8px;align-items:center;margin:10px 0}
+  .source-row input,.source-row select{min-width:0;flex:1;border:1px solid #dedede;border-radius:9px;padding:9px 10px;background:#fff;font:inherit;font-size:13px;color:#333}
+  .source-row input:focus,.source-row select:focus{outline:2px solid #e3e8ff;border-color:#a9b8ff}
+  .source-row select{flex:0 1 165px}
+  .source-card button:disabled{opacity:.5;cursor:default}
+  .source-hint{font-size:12px;line-height:1.8;color:#888;margin:8px 0}
+  .source-hint a{color:#4d6bfe}
+  .source-status{font-size:12px;color:#777;line-height:1.7;white-space:pre-line;overflow-wrap:anywhere}
+  .source-status.error{color:#c34747}
+  .source-list{margin:10px 0 18px;max-height:170px;overflow-y:auto}
+  .source-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+  .source-item label{display:flex;gap:8px;align-items:center;flex:1;min-width:0}
+  .source-item span{overflow-wrap:anywhere}
+  .source-item small{display:block;font-size:11px;color:#999;margin-top:3px}
+  .source-item button{font-size:12px;color:#999;padding:4px;flex-shrink:0}
+  .source-result{padding:14px 0;border-bottom:1px solid #eee;display:flex;gap:14px;align-items:flex-start}
+  .source-result .book-main{overflow-wrap:anywhere}
+  .source-result strong{font-size:14px;color:#262626}
+  .source-result p{font-size:12px;color:#888;margin:6px 0;line-height:1.7;white-space:pre-line}
+  .source-result .shelf-import{flex-shrink:0}
+  .online-loading{font-size:13px;color:#999;padding:16px 0}
+  .online-retry{color:#4d6bfe;font-size:13px;margin:8px 0}
+  @media(max-width:540px){.source-row{flex-wrap:wrap}.source-row select{flex-basis:100%}.shelf-head{padding:16px 12px 10px}.shelf-acts{gap:2px}.shelf-import{padding:0 8px}.shelf-title{flex-wrap:wrap;gap:3px}.source-body{padding:0 14px 16px}}
+
   /* toast */
   #toast{
     position:fixed;left:50%;top:14px;transform:translate(-50%,-8px);z-index:80;
@@ -492,13 +524,31 @@
 <div class="shelf-head">
 <div class="shelf-title">书架<span id="shelfCount"></span></div>
 <div class="shelf-acts">
+<button class="shelf-import" id="shelfSources">书源 / 搜索</button>
 <button class="shelf-import" id="shelfImport">+ 导入 TXT</button>
 <button class="shelf-x" id="shelfClose" title="关闭">✕</button>
 </div>
 </div>
 <div class="shelf-list" id="shelfList"></div>
-<div class="shelf-foot">导入的书籍会保存在本地，下次打开自动续读 · 也可以直接把 TXT 拖进窗口</div>
+<div class="shelf-foot">支持 TXT 导入和书源搜索 · 书架与进度保存在本地，下次打开自动续读</div>
 </div>
+</div><div id="sourceDialog" role="dialog" aria-modal="true" aria-labelledby="sourceTitle">
+<div class="source-card">
+<div class="shelf-head"><div class="shelf-title" id="sourceTitle">书源与小说搜索</div><button class="shelf-x" id="sourceClose" title="关闭">✕</button></div>
+<div class="source-body">
+<fieldset id="sourceManager" class="source-manager" aria-label="书源管理">
+<form id="sourceImportForm" class="source-row"><input id="sourceAddress" type="text" aria-label="书源地址" placeholder="粘贴书源 JSON、详情页或一键导入地址" autocomplete="off" required/><button class="shelf-import" id="sourceImportButton">导入书源</button></form>
+<p class="source-hint">到 <a href="https://www.yckceo.com/yuedu/shuyuan/index.html" target="_blank" rel="noopener noreferrer">源仓库</a> 打开具体书源，复制「书源地址」即可，支持合集。兼容常见的阅读 3.x CSS、XPath、JSON 规则；脚本、登录和验证码类书源暂不支持。</p>
+<div id="sourceImportStatus" class="source-status" role="status"></div>
+<div class="source-tools"><span id="sourceSummary" class="source-status"></span><button type="button" class="shelf-import" id="sourceClean">清理无用书源</button><button type="button" class="shelf-import source-clear" id="sourceClear">清除全部书源</button></div>
+<p class="source-hint">清理范围：已停用或规则不兼容的书源。</p>
+<div class="source-list" id="sourceList"></div>
+</fieldset>
+<form id="sourceSearchForm" class="source-row"><input id="sourceKeyword" aria-label="小说书名或作者" placeholder="输入书名或作者" maxlength="100" required autocomplete="off"/><select id="sourceSelect" aria-label="搜索书源"><option value="">全部已启用书源</option></select><button class="shelf-import" id="sourceSearchButton">搜索小说</button></form>
+<div id="sourceSearchStatus" class="source-status" role="status"></div>
+<div id="sourceResults"></div>
+<button class="shelf-import" id="sourceMore" hidden>加载下一页</button>
+</div></div>
 </div><div id="hiddenScreen">
 <div class="doc">
 <h2>科室信息科工作例会纪要</h2>
@@ -746,8 +796,9 @@ WHERE cyrq &gt;= '2026-10-01'
     var el = document.createElement('section');
     el.className = 'chapter';
     el.dataset.idx = i;
-    var body = ch.paras.map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('');
+    var body = (ch.paras || []).map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('');
     el.innerHTML = '<h1 class="ch-title">' + esc(ch.title) + '</h1><div class="ch-body">' + body + '</div>';
+    if (CURRENT && CURRENT.online && !ch.paras) loadOnlineChapter(CURRENT, ch, el);
     var reference = $('#referenceConversation').content;
     el.appendChild(reference.querySelector('.dbe8cf4a').cloneNode(true));
     var actions = reference.querySelector('[data-act="copy"]').parentElement.parentElement.cloneNode(true);
@@ -766,6 +817,7 @@ WHERE cyrq &gt;= '2026-10-01'
 
   function appendNext(){
     if (S.winEnd + 1 >= S.total) return false;
+    if (CURRENT && CURRENT.online && S.winEnd >= S.winStart && !S.chapters[S.winEnd].paras) return false;
     var i = S.winEnd + 1;
     thread.appendChild(chapterEl(i));
     S.winEnd = i;
@@ -1147,19 +1199,21 @@ WHERE cyrq &gt;= '2026-10-01'
    *  9. storage — 书架（IndexedDB）
    * ------------------------------------------------------------------ */
   var DB = null, DB_NAME = 'dsreader';
-  var ST_BOOKS = 'books', ST_TEXT = 'texts';
+  var ST_BOOKS = 'books', ST_TEXT = 'texts', ST_SOURCES = 'sources';
 
   function dbOpen(){
     return new Promise(function(resolve){
       var req;
-      try { req = indexedDB.open(DB_NAME, 1); }
+      try { req = indexedDB.open(DB_NAME, 2); }
       catch (e){ return resolve(null); }
       req.onupgradeneeded = function(e){
         var db = e.target.result;
         if (!db.objectStoreNames.contains(ST_BOOKS)) db.createObjectStore(ST_BOOKS, { keyPath: 'id' });
         if (!db.objectStoreNames.contains(ST_TEXT)) db.createObjectStore(ST_TEXT, { keyPath: 'id' });
+        if (!db.objectStoreNames.contains(ST_SOURCES)) db.createObjectStore(ST_SOURCES, { keyPath: 'id' });
       };
       req.onsuccess = function(e){ DB = e.target.result; resolve(DB); };
+      req.onblocked = function(){ toast('请关闭其他阅读器标签页，再刷新以完成书源功能升级'); };
       req.onerror = function(){ resolve(null); };
     });
   }
@@ -1195,7 +1249,8 @@ WHERE cyrq &gt;= '2026-10-01'
       id: rec.id, name: rec.name, chapterCount: rec.chapterCount || 0,
       size: rec.size || 0, addedAt: rec.addedAt || Date.now(),
       lastReadAt: rec.lastReadAt || Date.now(), idx: rec.idx || 0,
-      scroll: rec.scroll || 0, percent: rec.percent || 0
+      scroll: rec.scroll || 0, percent: rec.percent || 0,
+      online: !!rec.online, sourceId: rec.sourceId || '', sourceName: rec.sourceName || '', bookUrl: rec.bookUrl || ''
     };
   }
 
@@ -1219,7 +1274,7 @@ WHERE cyrq &gt;= '2026-10-01'
   }
 
   function openBookRecord(meta, text){
-    var chapters = parseBook(text);
+    var chapters = meta.online ? text.chapters : parseBook(text);
     if (!chapters.length){ toast('没有解析到正文内容'); return false; }
     // flush the book we are leaving before swapping CURRENT
     clearTimeout(saveTimer);
@@ -1279,6 +1334,12 @@ WHERE cyrq &gt;= '2026-10-01'
     return dbGet(ST_BOOKS, id).then(function(meta){
       if (!meta) return false;
       return dbGet(ST_TEXT, id).then(function(t){
+        if (meta.online){
+          if (!t || !t.online){ toast('在线书籍的目录丢失了，请重新搜索添加'); return false; }
+          var ch = t.online.chapters[clamp(meta.idx || 0, 0, t.online.chapters.length - 1)];
+          var ready = ch.paras ? Promise.resolve() : sourceRequest('chapter', {source:t.online.source, url:ch.url}).then(function(result){ ch.paras = result.paras; return dbPut(ST_TEXT, t); });
+          return ready.then(function(){ return openBookRecord(meta, t.online); }).catch(function(e){ toast(e.message); return false; });
+        }
         if (!t || !t.text){ toast('这本书的正文丢失了，请重新导入'); return false; }
         return openBookRecord(meta, t.text);
       });
@@ -1410,6 +1471,7 @@ WHERE cyrq &gt;= '2026-10-01'
           '<div class="book-name">' + esc(b.name) +
             (b.id === S.bookId ? '<span class="cur">在读</span>' : '') + '</div>' +
           '<div class="book-meta"><span>' + (b.chapterCount || 0) + ' 章</span><i></i>' +
+            (b.online ? '<span>' + esc(b.sourceName) + '</span><i></i>' : '') +
             '<span>第 ' + ((b.idx || 0) + 1) + ' 章</span><i></i>' +
             '<span>' + pct.toFixed(1) + '%</span><i></i>' +
             '<span>' + fmtTime(b.lastReadAt) + '</span></div>' +
@@ -2381,6 +2443,7 @@ $$ <span class="k">LANGUAGE</span> plpgsql;`),
 
   // bookshelf
   $('#shelfImport').addEventListener('click', function(){ $('#fileInput').click(); });
+  $('#shelfSources').addEventListener('click', openSourceDialog);
   $('#shelfClose').addEventListener('click', closeShelf);
   shelfEl.addEventListener('click', function(e){ if (e.target === shelfEl) closeShelf(); });
 
@@ -2693,6 +2756,7 @@ $$ <span class="k">LANGUAGE</span> plpgsql;`),
       inputBlur();
       if ($('#profileDialog').classList.contains('show')){ closeProfile(); return; }
       if ($('#txtTools').classList.contains('show')){ $('#txtTools').classList.remove('show'); return; }
+      if ($('#sourceDialog').classList.contains('show')){ closeSourceDialog(); return; }
       if ($('#disguiseEditor').classList.contains('show')){ closeDisguiseEditor(); return; }
       if ($('#historySearch').classList.contains('show')){ closeHistorySearch(); return; }
       if ($('#help').classList.contains('show')){ $('#help').classList.remove('show'); return; }
@@ -2705,7 +2769,7 @@ $$ <span class="k">LANGUAGE</span> plpgsql;`),
       return;
     }
 
-    if ($('#profileDialog').classList.contains('show') || $('#txtTools').classList.contains('show') || $('#disguiseEditor').classList.contains('show')) return;
+    if ($('#profileDialog').classList.contains('show') || $('#txtTools').classList.contains('show') || $('#disguiseEditor').classList.contains('show') || $('#sourceDialog').classList.contains('show')) return;
 
     var typing = document.activeElement && (
       document.activeElement.isContentEditable ||
@@ -2825,14 +2889,291 @@ $$ <span class="k">LANGUAGE</span> plpgsql;`),
       (data.texts || []).forEach(function(t){
         chain = chain.then(function(){ return dbPut(ST_TEXT, t); });
       });
+      (data.sources || []).forEach(function(source){
+        chain = chain.then(function(){ return dbPut(ST_SOURCES, source); });
+      });
       return chain.then(function(){
         try {
           var ls = data.ls || {};
           Object.keys(ls).forEach(function(k){ localStorage.setItem(k, ls[k]); });
         } catch (e){}
-        return true;
+        return dbAll(ST_SOURCES).then(function(list){ SOURCES = list; return true; });
       });
     }).catch(function(){ return false; });
+  }
+
+  var SOURCES = [], SOURCE_RESULTS = [], SOURCE_QUERY = null, SOURCE_RUN = null;
+  var ONLINE_PENDING = new Map();
+
+  async function sourceRequest(action, body, signal){
+    var controller = new AbortController();
+    var cancel = function(){ controller.abort(); };
+    if (signal){
+      if (signal.aborted) controller.abort();
+      else signal.addEventListener('abort', cancel, {once:true});
+    }
+    var timer = setTimeout(cancel, action === 'toc' ? 120000 : 45000);
+    try {
+      var response = await fetch('/__sources/' + action, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:controller.signal});
+      if (!(response.headers.get('content-type') || '').includes('application/json')) throw new Error('请重启新版阅读器服务后再使用书源功能');
+      var result = await response.json();
+      if (!response.ok) throw new Error(result.error || '书源请求失败');
+      return result;
+    } catch(e){
+      if (e.name === 'AbortError') throw new Error(signal && signal.aborted ? '已停止搜索' : '书源请求超时，请重试或更换书源');
+      throw e;
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', cancel);
+    }
+  }
+
+  function sourceStatus(id, message, error){
+    var node = $('#' + id);
+    node.textContent = message;
+    node.classList.toggle('error', !!error);
+  }
+
+  function renderSources(){
+    var list = $('#sourceList'), select = $('#sourceSelect'), selected = select.value;
+    list.innerHTML = '';
+    select.innerHTML = '<option value="">全部已启用书源</option>';
+    SOURCES.forEach(function(source, i){
+      var row = document.createElement('div');
+      row.className = 'source-item';
+      row.innerHTML = '<label><input type="checkbox" data-source-toggle="' + i + '"' + (source.enabled ? ' checked' : '') + (source.unsupportedReason ? ' disabled' : '') + '><span>' + esc(source.bookSourceName) + '<small>' + esc(source.unsupportedReason || source.bookSourceUrl) + '</small></span></label><button data-source-delete="' + i + '">移除</button>';
+      list.appendChild(row);
+      if (source.enabled && !source.unsupportedReason){
+        var option = document.createElement('option');
+        option.value = source.id;
+        option.textContent = source.bookSourceName;
+        select.appendChild(option);
+      }
+    });
+    select.value = selected;
+    if (select.selectedIndex < 0) select.value = '';
+    var unused = SOURCES.filter(function(s){ return !s.enabled || s.unsupportedReason; }).length;
+    $('#sourceSummary').textContent = '共 ' + SOURCES.length + ' 个书源 · 可清理 ' + unused + ' 个';
+    $('#sourceClean').disabled = !unused;
+    $('#sourceClear').disabled = !SOURCES.length;
+    if (!SOURCES.length) list.innerHTML = '<p class="source-hint">还没有书源，先粘贴地址导入。</p>';
+  }
+
+  async function removeSourceBatch(all){
+    var manager = $('#sourceManager');
+    if (manager.disabled) return;
+    var targets = SOURCES.filter(function(s){ return all || !s.enabled || s.unsupportedReason; });
+    if (!targets.length){ sourceStatus('sourceImportStatus', all ? '还没有书源' : '没有需要清理的书源'); return; }
+    var question = all ? '确定清除全部 ' + targets.length + ' 个书源吗？' : '确定清理 ' + targets.length + ' 个已停用或规则不兼容的书源吗？';
+    if (!confirm(question + '\n书架中的小说和阅读进度会保留。移除后如需使用，请重新导入书源。')) return;
+    manager.disabled = true;
+    stopSourceSearch();
+    try {
+      var ids = new Set(targets.map(function(s){ return s.id; }));
+      if (await dbTx(ST_SOURCES, 'readwrite', function(os){ ids.forEach(function(id){ os.delete(id); }); }) === null) throw new Error('书源清理失败，请重试');
+      SOURCES = SOURCES.filter(function(s){ return !ids.has(s.id); });
+      clearSourceSearch();
+      renderSources();
+      sourceStatus('sourceImportStatus', (all ? '已清除全部 ' : '已清理 ') + targets.length + ' 个书源，书架中的小说和阅读进度已保留');
+    } catch(err){ sourceStatus('sourceImportStatus', err.message, true); }
+    finally { manager.disabled = false; }
+  }
+  $('#sourceClean').addEventListener('click', function(){ removeSourceBatch(false); });
+  $('#sourceClear').addEventListener('click', function(){ removeSourceBatch(true); });
+
+  function openSourceDialog(){
+    renderSources();
+    $('#sourceDialog').classList.add('show');
+    (SOURCES.some(function(s){ return s.enabled; }) ? $('#sourceKeyword') : $('#sourceAddress')).focus();
+  }
+  function closeSourceDialog(){
+    $('#sourceDialog').classList.remove('show');
+    stopSourceSearch();
+  }
+  function stopSourceSearch(){
+    if (!SOURCE_RUN) return;
+    var run = SOURCE_RUN;
+    SOURCE_RUN = null;
+    run.controller.abort();
+    $('#sourceSearchButton').disabled = false;
+    $('#sourceSearchButton').textContent = '搜索小说';
+    $('#sourceMore').hidden = true;
+    sourceStatus('sourceSearchStatus', '已停止搜索，保留 ' + SOURCE_RESULTS.length + ' 条结果，可继续选择阅读或重新搜索');
+  }
+  function clearSourceSearch(){
+    if (SOURCE_RUN) SOURCE_RUN.controller.abort();
+    SOURCE_RUN = SOURCE_QUERY = null;
+    SOURCE_RESULTS = [];
+    $('#sourceResults').innerHTML = '';
+    $('#sourceMore').hidden = true;
+    $('#sourceSearchButton').disabled = false;
+    $('#sourceSearchButton').textContent = '搜索小说';
+    sourceStatus('sourceSearchStatus', '');
+  }
+  $('#sourceClose').addEventListener('click', closeSourceDialog);
+  $('#sourceDialog').addEventListener('click', function(e){ if (e.target === this) closeSourceDialog(); });
+  $('#sourceImportForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    if ($('#sourceManager').disabled) return;
+    $('#sourceManager').disabled = true;
+    var button = $('#sourceImportButton');
+    button.disabled = true;
+    sourceStatus('sourceImportStatus', '正在下载并检查书源…');
+    try {
+      if (!DB) throw new Error('本地存储不可用，无法保存书源');
+      var result = await sourceRequest('import', {url:$('#sourceAddress').value.trim()});
+      for (var source of result.sources){
+        if (await dbPut(ST_SOURCES, source) === null) throw new Error('书源保存失败，请检查浏览器存储空间');
+        var at = SOURCES.findIndex(function(s){ return s.id === source.id; });
+        if (at >= 0) SOURCES[at] = source; else SOURCES.push(source);
+      }
+      clearSourceSearch();
+      renderSources();
+      var unavailable = result.sources.filter(function(s){ return s.unsupportedReason; }).length;
+      sourceStatus('sourceImportStatus', '已导入 / 更新 ' + result.sources.length + ' 个书源' + (unavailable ? '，其中 ' + unavailable + ' 个规则不兼容，已停用' : '') + (result.skipped ? '，跳过 ' + result.skipped + ' 个无效条目' : ''));
+      $('#sourceAddress').value = '';
+    } catch(err){ sourceStatus('sourceImportStatus', err.message, true); }
+    finally { button.disabled = false; $('#sourceManager').disabled = false; }
+  });
+  $('#sourceList').addEventListener('change', async function(e){
+    if (e.target.dataset.sourceToggle == null) return;
+    var source = SOURCES[+e.target.dataset.sourceToggle];
+    source.enabled = e.target.checked;
+    if (await dbPut(ST_SOURCES, source) === null){
+      source.enabled = !source.enabled;
+      sourceStatus('sourceImportStatus', '书源设置保存失败', true);
+    }
+    clearSourceSearch();
+    renderSources();
+  });
+  $('#sourceList').addEventListener('click', async function(e){
+    var button = e.target.closest('[data-source-delete]');
+    if (!button) return;
+    var source = SOURCES[+button.dataset.sourceDelete];
+    if (await dbDel(ST_SOURCES, source.id) === null){ sourceStatus('sourceImportStatus', '书源移除失败', true); return; }
+    SOURCES = SOURCES.filter(function(s){ return s.id !== source.id; });
+    clearSourceSearch();
+    renderSources();
+    sourceStatus('sourceImportStatus', '已移除书源，已加入书架的小说仍可继续阅读');
+  });
+
+  function renderSourceResults(){
+    $('#sourceResults').innerHTML = SOURCE_RESULTS.map(function(book, i){
+      return '<div class="source-result"><div class="book-main"><strong>' + esc(book.name) + '</strong><p>' + esc((book.author || '作者未知') + ' · ' + book.source.bookSourceName) + '</p>' + (book.lastChapter ? '<p>最新：' + esc(book.lastChapter) + '</p>' : '') + (book.intro ? '<p>' + esc(book.intro.slice(0, 180)) + '</p>' : '') + '</div><button class="shelf-import" data-online-book="' + i + '">加入书架并阅读</button></div>';
+    }).join('');
+  }
+
+  async function searchSources(more){
+    if (SOURCE_RUN) return;
+    var key = $('#sourceKeyword').value.trim(), chosen = $('#sourceSelect').value;
+    if (!more){
+      clearSourceSearch();
+      var sources = SOURCES.filter(function(s){ return s.enabled && !s.unsupportedReason && (!chosen || chosen === s.id); });
+      if (!key){ sourceStatus('sourceSearchStatus', '请输入书名或作者', true); return; }
+      if (!sources.length){ sourceStatus('sourceSearchStatus', '请先导入并启用可用书源', true); return; }
+      SOURCE_QUERY = {key:key, sources:sources.slice(), page:0};
+    }
+    if (!SOURCE_QUERY) return;
+    var query = SOURCE_QUERY, page = ++query.page;
+    var run = {controller:new AbortController()}, next = 0, done = 0, added = 0, failures = [];
+    SOURCE_RUN = run;
+    $('#sourceSearchButton').textContent = '停止搜索';
+    $('#sourceMore').hidden = true;
+    function progress(){
+      sourceStatus('sourceSearchStatus', '第 ' + page + ' 页 · 已搜索 ' + done + ' / ' + query.sources.length + ' 个书源 · 找到 ' + SOURCE_RESULTS.length + ' 条结果' + (failures.length ? '\n' + failures.join('\n') : ''));
+    }
+    progress();
+    async function worker(){
+      while (next < query.sources.length && SOURCE_RUN === run){
+        var source = query.sources[next++];
+        try {
+          var result = await sourceRequest('search', {source:source, key:query.key, page:page}, run.controller.signal);
+          if (SOURCE_RUN !== run) return;
+          result.books.forEach(function(book){
+            if (SOURCE_RESULTS.some(function(b){ return b.source.id === source.id && b.bookUrl === book.bookUrl; })) return;
+            SOURCE_RESULTS.push(Object.assign({}, book, {source:source}));
+            added++;
+          });
+          renderSourceResults();
+        } catch(err){
+          if (SOURCE_RUN !== run) return;
+          failures.push(source.bookSourceName + '：' + err.message);
+        }
+        done++;
+        progress();
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(4, query.sources.length)}, worker));
+    if (SOURCE_RUN !== run) return;
+    SOURCE_RUN = null;
+    $('#sourceSearchButton').disabled = false;
+    $('#sourceSearchButton').textContent = '搜索小说';
+    $('#sourceMore').hidden = !added;
+    if (!SOURCE_RESULTS.length && !failures.length) sourceStatus('sourceSearchStatus', '没有找到相关小说，请更换关键词或书源');
+  }
+  $('#sourceSearchForm').addEventListener('submit', function(e){ e.preventDefault(); if (SOURCE_RUN) stopSourceSearch(); else searchSources(false); });
+  $('#sourceSearchButton').addEventListener('click', function(e){ if (SOURCE_RUN){ e.preventDefault(); stopSourceSearch(); } });
+  $('#sourceMore').addEventListener('click', function(){ searchSources(true); });
+
+  async function addOnlineBook(book){
+    var existing = S.books.find(function(b){ return b.online && b.sourceId === book.source.id && b.bookUrl === book.bookUrl; });
+    if (existing) return openBook(existing.id);
+    if (!DB) throw new Error('本地存储不可用，无法保存书籍');
+    var result = await sourceRequest('toc', {source:book.source, bookUrl:book.bookUrl});
+    var content = await sourceRequest('chapter', {source:book.source, url:result.chapters[0].url});
+    result.chapters[0].paras = content.paras;
+    var rec = {id:newId(), name:book.name, chapterCount:result.chapters.length, addedAt:Date.now(), lastReadAt:Date.now(), idx:0, scroll:0, percent:0, online:true, sourceId:book.source.id, sourceName:book.source.bookSourceName, bookUrl:book.bookUrl};
+    var online = {source:book.source, chapters:result.chapters};
+    if (await dbPut(ST_TEXT, {id:rec.id, online:online}) === null || await dbPut(ST_BOOKS, metaOf(rec)) === null) throw new Error('保存书籍失败，请检查浏览器存储空间');
+    return openBookRecord(rec, online);
+  }
+  $('#sourceResults').addEventListener('click', async function(e){
+    var button = e.target.closest('[data-online-book]');
+    if (!button) return;
+    var book = SOURCE_RESULTS[+button.dataset.onlineBook];
+    $('#sourceResults').querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+    button.textContent = '正在加载…';
+    sourceStatus('sourceSearchStatus', '正在获取《' + book.name + '》的目录和正文…');
+    try {
+      if (await addOnlineBook(book)){
+        closeSourceDialog(); closeShelf();
+        toast('已打开《' + book.name + '》');
+      } else {
+        throw new Error('打开书籍失败，请重新添加或更换书源');
+      }
+    } catch(err){
+      sourceStatus('sourceSearchStatus', err.message, true);
+      alert('添加《' + book.name + '》失败\n书源：' + book.source.bookSourceName + '\n\n' + err.message);
+    }
+    finally { renderSourceResults(); }
+  });
+
+  function loadOnlineChapter(meta, ch, el){
+    var body = el.querySelector('.ch-body');
+    body.innerHTML = '<p class="online-loading">正在加载章节…</p>';
+    var key = meta.id + '\n' + ch.url;
+    if (!ONLINE_PENDING.has(key)){
+      var pending = sourceRequest('chapter', {source:meta.text.source, url:ch.url}).then(function(result){
+        return result.paras;
+      }).finally(function(){ ONLINE_PENDING.delete(key); });
+      ONLINE_PENDING.set(key, pending);
+    }
+    ONLINE_PENDING.get(key).then(function(paras){
+      ch.paras = paras;
+      if (CURRENT === meta && indexOfBook(meta.id) >= 0) dbPut(ST_TEXT, {id:meta.id, online:meta.text});
+      if (CURRENT !== meta || !el.isConnected) return;
+      var above = el.getBoundingClientRect().bottom <= chatScroll.getBoundingClientRect().top;
+      var height = el.offsetHeight;
+      body.innerHTML = ch.paras.map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('');
+      if (above) chatScroll.scrollTop += el.offsetHeight - height;
+      refreshOffsets();
+      updateProgress();
+    }).catch(function(err){
+      if (CURRENT !== meta || !el.isConnected) return;
+      body.innerHTML = '<p class="online-loading">' + esc(err.message) + '</p><button class="online-retry">重新加载本章</button>';
+      body.querySelector('button').addEventListener('click', function(){ loadOnlineChapter(meta, ch, el); });
+      refreshOffsets();
+    });
   }
 
   function boot(){
@@ -2850,6 +3191,8 @@ $$ <span class="k">LANGUAGE</span> plpgsql;`),
     applyType();
 
     dbOpen().then(function(){
+      return dbAll(ST_SOURCES).then(function(list){ SOURCES = list; });
+    }).then(function(){
       return dbAll(ST_BOOKS);
     }).then(function(list){
       S.books = (list || []).slice();
